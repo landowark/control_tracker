@@ -1,0 +1,11 @@
+# custom join statement defined in setup.__init__ 
+irida:
+  project_number: #: Project id assigned by irida
+  project_name: #: Project name assigned by irida
+  username: #: Username for irida permissions
+  password: #: Password for irida permissions
+  storage: #: Location to store irida shortcuts (only used if not overridden in command line options)
+folder:
+  output: #: Where xlsx and html output files from reports will be stored.
+  old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
+ct_type_regexes: #: list of regex patterns to pull out control types.

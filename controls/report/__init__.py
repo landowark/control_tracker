@@ -1,0 +1,44 @@
+from tools.db_functions import get_all_Control_Types_names, convert_control_to_dict, get_all_samples_by_control_type
+from tools.excel_functions import construct_df_from_json
+from tools.vis_functions import create_stacked_bar_chart, output_figure
+import json
+from pathlib import Path
+import logging
+
+logger = logging.getLogger("controls.report")
+
+def main_report(settings:dict):
+    """
+    Performs all functions of making a report.
+
+    Args:
+        settings (dict): Settings passed down from click.
+    """        
+    logger.debug(f"REPORT Got settings passed down: {settings}")
+    logger.debug(f"Output folder: {settings['folder']['output']}")
+    # Get all names of all control types for grouping.
+    ct_types = get_all_Control_Types_names(settings=settings)
+    logger.debug(f"CT-TYPES: {ct_types}")
+    # Construct dictionary assigning all controls of a type to that key.
+    by_type = {ct_type: [convert_control_to_dict(sample) for sample in get_all_samples_by_control_type(ct_type)] for ct_type in ct_types}
+    logger.debug(f"By type: {by_type}")
+    if settings['test']:
+        by_type = {item:by_type[item] for item in by_type if by_type[item] != []}
+        logger.debug(f"By type: {by_type}")
+        with open("test_bytype.json", "w") as f:
+            json.dump(by_type, f, indent =4)
+    # Convert dictionaries to dataframes (Also writes xlsx)
+    by_type = [construct_df_from_json(settings=settings, group_name=group, group_in=by_type[group], output_dir=settings['folder']['output']) for group in by_type]
+    if settings['test']:
+        outdir = Path(__file__).parent.parent.parent
+    else:
+        outdir = Path(settings['folder']['output'])
+    for ct_type in by_type:
+        logger.debug(f"Group name: {list(ct_type.keys())[0]}")
+        # Grab list name for chart title
+        group_name = list(ct_type.keys())[0]
+        # Construct stacked bar chart.
+        fig = create_stacked_bar_chart(settings=settings, df=ct_type[group_name], group_name=group_name)
+        # Write bar chart to html file.
+        output_figure(settings=settings, fig=fig, group_name=group_name)
+    logger.info("The REPORT run has ended.")
