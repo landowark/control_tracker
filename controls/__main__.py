@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import click
 from setup import make_config, setup_logger
 from parse import main_parse

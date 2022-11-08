@@ -25,9 +25,6 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
     fig_matches = px.bar(df, x="submitted_date", y="matches_ratio", color="target", title=f"{group_name}_matches", barmode='stack', hover_data=["genus", "matches_hashes", "target"])
     fig_contains.update_traces(visible=True)
     fig_matches.update_traces(visible=False)
-    # fig.add_traces(fig_contains)
-    # fig_contains = go.Bar(x=df['submitted_date'], y=df['contains_ratio'])
-    # fig_matches = go.Bar(x=df['submitted_date'], y=df['matches_ratio'])
     # Plotly express returns a full figure, so we have to use the data from that figure only.
     fig.add_traces(fig_contains.data)
     fig.add_traces(fig_matches.data)
@@ -65,13 +62,7 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
             )
         ]
     )
-    # fig.for_each_trace(
-    #     lambda trace: trace.update(visible=False) if "matches" in trace.title else (),
-    # )
     logger.debug(fig)
-    if settings['test']:
-        fig_contains.write_html(f"{Path(settings['folder']['output']).joinpath(f'{group_name}_contains.html')}")
-        fig_matches.write_html(f"{Path(settings['folder']['output']).joinpath(f'{group_name}_matches.html')}")
     return fig
     
 def output_figure(settings:dict, fig:Figure, group_name:str):
