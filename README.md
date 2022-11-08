@@ -74,6 +74,8 @@ python controls DBinit [OPTIONS]
 
 ### parse
 
+This command will pull data from irida. config.yml must hold project info, username, password.
+
 ```shell
 python controls parse [OPTIONS]
 ```
@@ -95,6 +97,8 @@ Folder for storage of fastq files.
 
 
 ### report
+
+This command builds html and xlsx reports for the controls.
 
 ```shell
 python controls report [OPTIONS]
