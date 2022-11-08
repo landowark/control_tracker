@@ -6,10 +6,10 @@ from report import main_report
 logger = setup_logger()
 
 @click.group()
-@click.option("-v", "--verbose", is_flag=True, default=False)
-@click.option("-c", "--config")
+@click.option("-v", "--verbose", is_flag=True, default=False, help="Set logging level to DEBUG if true.")
+@click.option("-c", "--config", help="Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml")
 @click.pass_context
-def cli(ctx, verbose, config, test):
+def cli(ctx, verbose, config):
     click.echo(f"Verbose: {verbose}")
     # ensure that ctx.obj exists and is a dict (in case `cli()` is called
     # by means other than the `if` block below)

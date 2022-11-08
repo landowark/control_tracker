@@ -16,10 +16,12 @@ controls [OPTIONS] COMMAND [ARGS]...
 
 
 ### -v(, --verbose()
+Set logging level to DEBUG if true.
+
 
 ### -c(, --config( <config>)
+Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml
 
-### -t(, --test()
 ### parse
 
 ```shell
@@ -72,4 +74,3 @@ folder:
   old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
 ct_type_regexes: #: list of regex patterns to pull out control types.
 ```
-
