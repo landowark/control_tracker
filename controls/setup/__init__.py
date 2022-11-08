@@ -2,6 +2,7 @@ import yaml
 import logging
 from .custom_loggers import GroupWriteRotatingFileHandler
 from pathlib import Path
+import alembic.config
 
 logger = logging.getLogger("controls.setup")
 
@@ -120,3 +121,11 @@ def setup_logger():
     logger.addHandler(ch)
     stderr_logger = logging.getLogger('STDERR')
     return logger
+
+def run_alembic_upgrade():
+    ini_path = Path(__file__).absolute().parent.parent.joinpath("alembic.ini").__str__()
+    alembicArgs = [
+        '--raiseerr', "-c", ini_path,
+        'upgrade', 'head',
+    ]
+    alembic.config.main(argv=alembicArgs)

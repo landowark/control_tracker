@@ -1,33 +1,4 @@
 from setuptools import setup
-from setuptools.command.install import install
-from setuptools.command.develop import develop
-
-
-class PostDevelopCommand(develop):
-    """Post-installation for development mode."""
-    def run(self):
-        develop.run(self)
-        import alembic.config
-        alembicArgs = [
-            '--raiseerr',
-            'upgrade', 'head',
-        ]
-        print("Running Alembic migrations...")
-        alembic.config.main(argv=alembicArgs)
-
-
-class PostInstallCommand(install):
-    """Post-installation for installation mode."""
-    def run(self):
-        install.run(self)
-        import alembic.config
-        alembicArgs = [
-            '--raiseerr',
-            'upgrade', 'head',
-        ]
-        print("Running Alembic migrations...")
-        alembic.config.main(argv=alembicArgs)
-        
 
 setup(
     name='ControlsTracker',
@@ -39,9 +10,7 @@ setup(
     entry_points={
         'console_scripts': [
             'controls = ControlsTracker.__main__:cli',
+            'controls_db_init = ControlsTrack.setup:run_alembic_upgrade'
         ],
-    },
-    cmdclass={
-        'install': PostInstallCommand,
     },
 )
