@@ -59,9 +59,6 @@ def read_tsv_string(string_in:str) -> DataFrame:
         logger.error(f"Got empty tsv file. Returning empty dataframe.")
         return DataFrame()
 
-
-
-
 def read_excel(filein: str):
     """
     Reads an xlsx file into a pandas dataframe
@@ -126,19 +123,18 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
     for sample in group_in:
         # All should already have the same controltype
         del sample['controltype']
+    # Flatten dictionary.
     group_in = [flatten_dict(sample) for sample in group_in]
-    if settings['test']:
-        with open("test_flattened.json", "w") as f:
-            json.dump(group_in, f, indent=4)
     logger.debug(f"Flattened dictionary: {group_in}")
     sorts = ['submitted_date', "genus"]
     sorts[-1:-1] = [f"{mode}_ratio" for mode in modes]
+    # Set descending for any columns that have "{mode}" in the header.
     ascending = [False if item.split("_")[0] in modes else True for item in sorts]
     logger.debug(f"Ascending: {list(zip(sorts, ascending))}")
+    # create and merge dataframes.
     df = pd.concat(create_df_from_flattened_dict(group_in, targets)) \
         .sort_values(by=sorts, ascending=ascending) \
         .reset_index().drop("index",1)
-    
     logger.debug(f"Writing to: {Path(output_dir).joinpath(group_name)}.xlsx")
     df.to_excel(f"{Path(output_dir).joinpath(group_name)}.xlsx", engine="openpyxl")
     return {group_name: df}

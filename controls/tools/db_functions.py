@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from models import *
 from pathlib import Path
 import logging
-from tools.misc import parse_date, parse_sample_json
+from tools.misc import parse_date
 
 
 logger = logging.getLogger("controls.tools.db_functions")
@@ -38,7 +38,6 @@ def get_all_Control_Sample_names(settings:dict={}) -> list:
     session = Session(make_engine(settings=settings))
     samples = session.query(Control).filter(Control.submitted_date.is_not(None)).order_by(Control.submitted_date.desc()).all()
     samples = [sample.name for sample in samples]
-    # logger.debug(f"{getattr(samples[0], settings['mode'])}")
     logger.debug(f"Samples: {samples}")
     session.close()
     return samples
@@ -172,7 +171,6 @@ def convert_control_to_dict(control:Control) -> dict:
     """    
     control = control.__dict__
     for mode in ["contains", "matches"]:
-        # control[mode] = parse_sample_json(json.loads(control[mode]), mode=mode)
         try:
             control[mode] = json.loads(control[mode])
         except TypeError as e:
@@ -186,7 +184,6 @@ def convert_control_to_dict(control:Control) -> dict:
         del control['controltype']['_sa_instance_state']
         del control['controltype']['id']
         del control['parent_id']
-        # control['controltype']['targets'] = control['controltype']['targets']
         logger.debug(f"Targets: {control['controltype']['targets']}")
     except AttributeError as e:
         logger.error(f"Control {control['name']} has no control type.")
@@ -203,20 +200,27 @@ def check_samples_against_database(settings:dict) -> list:
     Returns:
         list: all sample folders whose name not in db.
     """    
+    # check if mode column is empty.
     db_samples = get_all_Control_Sample_names_if_mode_not_empty(settings)
     logger.debug(f"Checking against: {db_samples}")
     project_dir = Path(settings['irida']['storage']).joinpath(settings['irida']['project_name'])
     logger.debug(f"Checked folder names: {[sample.name for sample in project_dir.iterdir() if sample.is_dir()]}")
     samples_of_interest = [sample.__str__() for sample in project_dir.iterdir() if sample.is_dir() and sample.name not in db_samples]
-    # check if mode column is empty.
-    
     logger.debug(f'Folders for samples not in db: {samples_of_interest}')
-    # samples_of_interest = list(set(folder_samples) - set(db_samples))
-    # logger.debug(f"Samples of Interest: {samples_of_interest}")
     return samples_of_interest
 
 
 def get_all_samples_by_control_type(ct_type:str, settings:dict={}) -> list:
+    """
+    Returns a list of control objects that are instances of the input controltype.
+
+    Args:
+        ct_type (str): Name of the control type.
+        settings (dict, optional): Settings passed down from click. Defaults to {}.
+
+    Returns:
+        list: Control instances.
+    """    
     session = Session(make_engine(settings=settings))
     thing = session.query(ControlType).filter_by(name=ct_type).first()
     return thing.instances
