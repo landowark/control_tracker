@@ -37,7 +37,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'controls = controls.__main__:cli',
+            'controls = ControlsTracker.__main__:cli',
         ],
     },
     cmdclass={
