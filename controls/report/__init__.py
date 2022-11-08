@@ -1,8 +1,6 @@
-from tools.db_functions import get_all_Control_Types_names, convert_control_to_dict, get_all_samples_by_control_type
-from tools.excel_functions import construct_df_from_json
-from tools.vis_functions import create_stacked_bar_chart, output_figure
-import json
-from pathlib import Path
+from ..tools.db_functions import get_all_Control_Types_names, convert_control_to_dict, get_all_samples_by_control_type
+from ..tools.excel_functions import construct_df_from_json
+from ..tools.vis_functions import create_stacked_bar_chart, output_figure
 import logging
 
 logger = logging.getLogger("controls.report")
