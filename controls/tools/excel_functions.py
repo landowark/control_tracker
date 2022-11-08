@@ -4,7 +4,6 @@ import logging
 from datetime import date
 from pathlib import Path
 from collections.abc import MutableMapping
-import json
 from numpy import array as npa
 from io import StringIO
 

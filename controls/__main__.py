@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import click
-from .setup import make_config, setup_logger
-from .parse import main_parse
-from .report import main_report
+from setup import make_config, setup_logger
+from parse import main_parse
+from report import main_report
 
 logger = setup_logger()
 

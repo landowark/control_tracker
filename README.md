@@ -4,6 +4,34 @@ You can adapt this file completely to your liking, but it should at least
 contain the root `toctree` directive. -->
 # Welcome to control tracker’s documentation!
 
+# Installation
+
+1. Create a folder to hold everything.
+```shell
+mkdir ControlsTracker
+cd ControlsTracker
+```
+
+2. Clone the git repository.
+```shell
+git clone https://github.com/landowark/control_tracker.git .
+```
+
+3. Create virtual environment and install required python packages.
+```shell
+conda create --name <env> --file requirements.txt
+```
+
+4. Activate virtual environment.
+```shell
+conda activate <env>.
+```
+
+5. Initialize the sqlite3 database.
+```shell
+alembic upgrade head
+```
+
 # Usage.
 
 ## controls

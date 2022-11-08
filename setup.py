@@ -9,8 +9,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'controls = ControlsTracker.__main__:cli',
-            'controls_db_init = ControlsTrack.setup:run_alembic_upgrade'
+            'controls = controls.__main__:cli',
+            'controls_db_init = controls.setup:run_alembic_upgrade'
         ],
     },
 )

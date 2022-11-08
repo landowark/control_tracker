@@ -1,5 +1,6 @@
-from subprocess import check_output, Popen, PIPE, CalledProcessError 
+from subprocess import check_output, CalledProcessError 
 import logging
+import sys
 
 logger = logging.getLogger("controls.tools.subprocesses")
 

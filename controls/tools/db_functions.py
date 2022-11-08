@@ -2,10 +2,10 @@ import json
 from tkinter import N
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
-from ..models import *
+from models import *
 from pathlib import Path
 import logging
-from .misc import parse_date
+from misc import parse_date
 
 
 logger = logging.getLogger("controls.tools.db_functions")
