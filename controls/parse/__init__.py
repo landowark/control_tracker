@@ -39,7 +39,11 @@ def main_parse(settings):
             logger.debug(f"No existing tsv file: {tsv_file}, running refseq_masher for {settings['mode']}")
             tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__())
             logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
-            write_output(tsv_file, tsv_text)
+            try:
+                write_output(tsv_file, tsv_text)
+            except:
+                logger.error("No tsv text found, using NONE")
+                tsv_text = None
         # If there's an error running refseq we're going make some dummy data from the test files with headers only to fill in the gap
         if tsv_text == None:
             logger.error(f"Failed to write {settings['mode']}.tsv file due to error, Using dummy data.")

@@ -4,6 +4,7 @@ import click
 from setup import make_config, setup_logger
 from parse import main_parse
 from report import main_report
+from tools.db_functions import create_control_types
 
 logger = setup_logger()
 
@@ -41,7 +42,12 @@ def report(ctx, output_dir):
     if output_dir != None:
         ctx.obj['settings']['folder']['output'] = output_dir
     main_report(ctx.obj['settings'])
-    
+
+
+@cli.command("DBinit")
+@click.pass_context
+def DBinit():
+    create_control_types(settings=ctx.obj['settings'])
 
 if __name__ == "__main__":
     cli()

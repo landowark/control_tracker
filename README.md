@@ -27,12 +27,19 @@ conda create --name <env> --file requirements.txt
 conda activate <env>.
 ```
 
-5. Initialize the sqlite3 database.
+5. Install refseq_masher
+```shell
+pip install refseq_masher
+```
+(For the life of me I could not get this to work with conda.)
+
+
+6. Initialize the sqlite3 database.
 ```shell
 alembic upgrade head
 ```
 
-6. Edit 'config_dummy.yml' and save as 'config.yml'
+7. Edit 'config_dummy.yml' and save as 'config.yml'
 
 # Usage.
 

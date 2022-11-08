@@ -34,9 +34,6 @@ def enforce_valid_date(settings:dict, folder:str) -> date:
             return None
         else:
             logger.debug(f"Attempting to extract date from old database export: {settings['folder']['old_db_path']}")
-            if settings['test']:
-                folder_name = "MCS-July2022Plate1"
-            else:
-                folder_name = Path(folder).name
+            folder_name = Path(folder).name
             return get_date_from_access(sample_name=folder_name, tblControls_path=settings['folder']['old_db_path'])
             

@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from models import *
 from pathlib import Path
 import logging
-from misc import parse_date
+from .misc import parse_date
 
 
 logger = logging.getLogger("controls.tools.db_functions")
@@ -224,3 +224,19 @@ def get_all_samples_by_control_type(ct_type:str, settings:dict={}) -> list:
     session = Session(make_engine(settings=settings))
     thing = session.query(ControlType).filter_by(name=ct_type).first()
     return thing.instances
+
+
+def create_control_types(settings:dict) -> None:
+    """
+    Creates control types based on config settings
+
+    Args:
+        settings (dict): settings passed down from click
+    """    
+    session = Session(make_engine(settings=settings))
+    for item in settings['control_types']:
+        logger.debug(f"Creating control type {item}")
+        ct = ControlType(name=item, targets=settings['control_types'][item])
+        session.add(ct)
+    session.commit()
+    session.close()

@@ -16,12 +16,20 @@ def run_refseq_masher(settings:dict, folder:str):
         _type_: str
     """
     logger.debug(f"Attempting refseq_masher on {folder}...")
-    try:
-        out = check_output(['refseq_masher', settings['mode'], folder])
-        # logger.info(f"Refseq-masher result: {out}")
-        return out
-    except CalledProcessError as e:
-        logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
+    if settings['verbose']:
+        try:
+                out = check_output(['refseq_masher', '--verbose', settings['mode'], folder])
+                # logger.info(f"Refseq-masher result: {out}")
+                return out
+        except CalledProcessError as e:
+                logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
+    else:
+        try:
+                out = check_output(['refseq_masher', settings['mode'], folder])
+                # logger.info(f"Refseq-masher result: {out}")
+                return out
+        except CalledProcessError as e:
+                logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
 
 
 
