@@ -73,30 +73,3 @@ folder:
 ct_type_regexes: #: list of regex patterns to pull out control types.
 ```
 
-# Modules.
-
-# Contents:
-
-
-* [src](modules.md)
-
-
-    * [controls package](controls.md)
-
-
-        * [Subpackages](controls.md#subpackages)
-
-
-        * [Module contents](controls.md#module-controls)
-
-
-# Indices and tables
-
-
-* [Index](genindex.md)
-
-
-* [Module Index](py-modindex.md)
-
-
-* [Search Page](search.md)
