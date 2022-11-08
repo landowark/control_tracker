@@ -6,8 +6,8 @@ from setuptools.command.develop import develop
 class PostDevelopCommand(develop):
     """Post-installation for development mode."""
     def run(self):
-        import alembic.config
         develop.run(self)
+        import alembic.config
         alembicArgs = [
             '--raiseerr',
             'upgrade', 'head',
@@ -19,9 +19,8 @@ class PostDevelopCommand(develop):
 class PostInstallCommand(install):
     """Post-installation for installation mode."""
     def run(self):
-        import alembic.config
         install.run(self)
-        
+        import alembic.config
         alembicArgs = [
             '--raiseerr',
             'upgrade', 'head',
