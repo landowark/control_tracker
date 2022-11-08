@@ -27,7 +27,7 @@ conda create --name <env> --file requirements.txt
 conda activate <env>.
 ```
 
-5. Install refseq_masher
+5. Install refseq_masher if it failed to install during virtual environment creation.
 ```shell
 pip install refseq_masher
 ```
