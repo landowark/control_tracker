@@ -46,7 +46,7 @@ def report(ctx, output_dir):
 
 @cli.command("DBinit")
 @click.pass_context
-def DBinit():
+def DBinit(ctx):
     create_control_types(settings=ctx.obj['settings'])
 
 if __name__ == "__main__":

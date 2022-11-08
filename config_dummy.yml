@@ -8,4 +8,6 @@ irida:
 folder:
   output: #: Where xlsx and html output files from reports will be stored.
   old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
+control_types: #: Key:value pairs where key is name of the control type and value is a list of targets.
+  #: e.g. ATCC49226: ["Neisseria"]
 ct_type_regexes: #: list of regex patterns to pull out control types.

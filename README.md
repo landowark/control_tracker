@@ -39,14 +39,21 @@ pip install refseq_masher
 alembic upgrade head
 ```
 
-7. Edit 'config_dummy.yml' and save as 'config.yml'
+7. Edit 'config_dummy.yml' and save as 'config.yml'. You might have to get it from me.
+
+8. Create control types in the database.
+```shell
+python controls DBinit
+```
 
 # Usage.
+
+Note: All commands below will have to be executed in the folder and prepended with "python "
 
 ## controls
 
 ```shell
-controls [OPTIONS] COMMAND [ARGS]...
+python controls [OPTIONS] COMMAND [ARGS]...
 ```
 
 ### Options
@@ -59,10 +66,16 @@ Set logging level to DEBUG if true.
 ### -c(, --config( <config>)
 Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml
 
+### DBinit
+
+```shell
+python controls DBinit [OPTIONS]
+```
+
 ### parse
 
 ```shell
-controls parse [OPTIONS]
+python controls parse [OPTIONS]
 ```
 
 ### Options
@@ -84,7 +97,7 @@ Folder for storage of fastq files.
 ### report
 
 ```shell
-controls report [OPTIONS]
+python controls report [OPTIONS]
 ```
 
 ### Options
@@ -109,5 +122,7 @@ irida:
 folder:
   output: #: Where xlsx and html output files from reports will be stored.
   old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
+control_types: #: Key:value pairs where key is name of the control type and value is a list of targets.
+  #: e.g. ATCC49226: ["Neisseria"]
 ct_type_regexes: #: list of regex patterns to pull out control types.
 ```
