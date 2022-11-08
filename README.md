@@ -32,6 +32,8 @@ conda activate <env>.
 alembic upgrade head
 ```
 
+6. Edit 'config_dummy.yml' and save as 'config.yml'
+
 # Usage.
 
 ## controls
