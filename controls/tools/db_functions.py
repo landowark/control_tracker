@@ -232,7 +232,7 @@ def create_control_types(settings:dict) -> None:
 
     Args:
         settings (dict): settings passed down from click
-    """    
+    """
     session = Session(make_engine(settings=settings))
     for item in settings['control_types']:
         logger.debug(f"Creating control type {item}")
