@@ -10,7 +10,7 @@ logger = setup_logger()
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Set logging level to DEBUG if true.")
-@click.option("-c", "--config", help="Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml")
+@click.option("-c", "--config", type=click.Path(exists=True), help="Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml")
 @click.pass_context
 def cli(ctx, verbose, config):
     click.echo(f"Verbose: {verbose}")
@@ -25,7 +25,7 @@ def cli(ctx, verbose, config):
 
 @cli.command("parse")
 @click.pass_context
-@click.option("-s", "--storage", help="Folder for storage of fastq files. Overwrites config.yml path.")
+@click.option("-s", "--storage", type=click.Path(exists=True), help="Folder for storage of fastq files. Overwrites config.yml path.")
 @click.option('--mode', type=click.Choice(['contains', 'matches', 'both']), default="both", help="Refseq_masher mode to be run. Defaults to 'both'.")
 def parse(ctx, storage, mode):
     if storage != None:
