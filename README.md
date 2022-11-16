@@ -65,7 +65,7 @@ controls [OPTIONS] COMMAND [ARGS]...
 Set logging level to DEBUG if true.
 
 
-### -c, --config <config>
+### -c, --config <_config_>
 Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml
 
 ### DBinit
@@ -83,7 +83,7 @@ controls parse [OPTIONS]
 ### Options
 
 
-### -s, --storage <storage>
+### -s, --storage <_storage_>
 Folder for storage of fastq files. Overwrites config.yml path.
 
 
@@ -105,7 +105,7 @@ controls report [OPTIONS]
 ### Options
 
 
-### -o, --output_dir <output_dir>
+### -o, --output_dir <_output_dir_>
 Folder for storage of reports. Overwrites config.yml path.
 
 # Configuration file.
