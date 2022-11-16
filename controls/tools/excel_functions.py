@@ -31,10 +31,10 @@ def read_tsv(filein: str):
             logger.error(f"Somehow a non-existant file {filein} got past my check, returning None.")
             return None
     else:
-        logger.error(f"Could not find tsv file at {filein}")
-        df = None
+        logger.error(f"Could not find tsv file at {filein}. Returning empty dataframe.")
+        df = DataFrame()
     logger.debug(f"Dataframe: {df}")
-    return df
+    return df.dropna()
 
 
 def read_tsv_string(string_in:str) -> DataFrame:
@@ -69,12 +69,12 @@ def read_excel(filein: str):
         Dataframe: xlsx file contents as pandas dataframe
     """
     if Path(filein).exists:
-        df = pd.read_excel(filein, engine="openpyxl", index_col=0)
+        # logger.debug(f"Dataframe: {df}")
+        return pd.read_excel(filein, engine="openpyxl", index_col=0).dropna()
     else:
-        logger.error(f"Could not find xlsx file at {filein}")
-        df = None
-    logger.debug(f"Dataframe: {df}")
-    return df
+        logger.error(f"Could not find xlsx file at {filein}. Returning None.")
+        return None
+    
 
 def get_date_from_access(sample_name:str, tblControls_path:str) -> date:
     """
@@ -118,7 +118,9 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
     """    
     # 
     logger.debug(f"Group in: {group_in}")
-    targets = group_in[0]['controltype']['targets']
+    targets1 = group_in[0]['controltype']['targets']
+    targets2 = [f"{target}*" for target in targets1]
+    targets = [val for pair in zip(targets1, targets2) for val in pair]
     for sample in group_in:
         # All should already have the same controltype
         del sample['controltype']
@@ -134,6 +136,7 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
     df = pd.concat(create_df_from_flattened_dict(group_in, targets)) \
         .sort_values(by=sorts, ascending=ascending) \
         .reset_index().drop("index",1)
+    df = df.dropna()
     logger.debug(f"Writing to: {Path(output_dir).joinpath(group_name)}.xlsx")
     df.to_excel(f"{Path(output_dir).joinpath(group_name)}.xlsx", engine="openpyxl")
     return {group_name: df}

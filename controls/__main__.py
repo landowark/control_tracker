@@ -26,11 +26,14 @@ def cli(ctx, verbose, config):
 @cli.command("parse")
 @click.pass_context
 @click.option("-s", "--storage", help="Folder for storage of fastq files.")
-@click.option('--mode', type=click.Choice(['contains', 'matches']), required = True)
+@click.option('--mode', type=click.Choice(['contains', 'matches', 'both']), default="both")
 def parse(ctx, storage, mode):
     if storage != None:
         ctx.obj['settings']['irida']['storage'] = storage
-    ctx.obj['settings']['mode'] = mode
+    if mode == "both":
+        ctx.obj['settings']['mode'] = ['contains', 'matches']
+    else:
+        ctx.obj['settings']['mode'] = [mode]
     click.echo(f"Using context: {ctx.obj}")
     main_parse(ctx.obj['settings'])
     

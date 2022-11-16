@@ -4,7 +4,7 @@ import sys
 
 logger = logging.getLogger("controls.tools.subprocesses")
 
-def run_refseq_masher(settings:dict, folder:str):
+def run_refseq_masher(settings:dict, folder:str, mode:str):
     """
     Runs commandline utility to generate contains file using settings from config.yml
 
@@ -18,14 +18,14 @@ def run_refseq_masher(settings:dict, folder:str):
     logger.debug(f"Attempting refseq_masher on {folder}...")
     if settings['verbose']:
         try:
-                out = check_output(['refseq_masher', '--verbose', settings['mode'], folder])
+                out = check_output(['refseq_masher', '--verbose', mode, folder])
                 # logger.info(f"Refseq-masher result: {out}")
                 return out
         except CalledProcessError as e:
                 logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
     else:
         try:
-                out = check_output(['refseq_masher', settings['mode'], folder])
+                out = check_output(['refseq_masher', mode, folder])
                 # logger.info(f"Refseq-masher result: {out}")
                 return out
         except CalledProcessError as e:

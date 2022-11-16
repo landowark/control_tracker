@@ -63,6 +63,7 @@ def parse_control_type_from_name(settings:dict, control_name:str) -> str:
     """    
     regexes = [fr"{item}" for item in settings['ct_type_regexes']]
     temp = '(?:% s)' % '|'.join(regexes)
+    # Note: matches here does not refer to the mode matches, but regex pattern matches.
     matches = re.match(temp, control_name)
     logger.debug(f"Regex matches: {matches}")
     try:
@@ -122,3 +123,52 @@ def parse_sample_json(json_in:dict, mode:str) -> dict:
             new_dict[genus][f'{mode}_ratio'] = split_ratio
     return new_dict
 
+def get_date_from_filepath(inpath:Path) -> date:
+    """
+    Returns a valid date from filepath if found.
+
+    Args:
+        inpath (Path): directory being parsed
+
+    Returns:
+        date: Submission date.
+    """    
+    # Okay, we want to hopefully parse the date from the filename.
+    logger.debug(f"Running regex on: {inpath.absolute().__str__()}")
+    date_regex = assemble_date_regex()
+    sub_date_raw = date_regex.match(inpath.absolute().__str__())
+    if bool(sub_date_raw):
+        logger.debug(f"Found date: {sub_date_raw.group()}")
+        return create_date(sub_date_raw.group())
+    else:
+        return None
+        
+        
+def get_date_from_fastq_ctime(inpath: Path) -> date:
+    """
+    Returns a valid date from fastq creation time
+
+    Args:
+        inpath (Path): folder being parsed
+
+    Returns:
+        date: submitted date.
+    """          
+    relevant_file = list(inpath.glob('*.fastq'))[0]
+    logger.warning(f"Finding date from fastq creation time of {relevant_file}.")
+    try:
+        return datetime.fromtimestamp(relevant_file.stat().st_ctime).date()
+    except:
+        return None
+
+def alter_genera_names(input_dict:dict) -> dict:
+    """
+    Adds an asterisk to all key names in input dictionary
+
+    Args:
+        input_dict (dict): input dictionary
+
+    Returns:
+        dict: output dictionary
+    """    
+    return {f"{k}*":v for k,v in input_dict.items() if k != 'nan'}

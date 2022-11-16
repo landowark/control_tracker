@@ -20,7 +20,7 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
         Figure: _description_
     """    
     fig = Figure()
-
+    df = df.dropna()
     fig_contains = px.bar(df, x="submitted_date", y="contains_ratio", color="target", title=f"{group_name}_contains", barmode='stack', hover_data=["genus", "contains_hashes", "target"])
     fig_matches = px.bar(df, x="submitted_date", y="matches_ratio", color="target", title=f"{group_name}_matches", barmode='stack', hover_data=["genus", "matches_hashes", "target"])
     fig_contains.update_traces(visible=True)
@@ -62,6 +62,13 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
             )
         ]
     )
+    fig.add_annotation(text='* - Sample submission date parsed from fastq file creation date', 
+                    align='left',
+                    showarrow=False,
+                    xref='paper',
+                    yref='paper',
+                    x=0.0,
+                    y=1.1)
     logger.debug(fig)
     return fig
     

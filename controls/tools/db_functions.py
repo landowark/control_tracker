@@ -42,7 +42,7 @@ def get_all_Control_Sample_names(settings:dict={}) -> list:
     session.close()
     return samples
 
-def get_all_Control_Sample_names_if_mode_not_empty(settings:dict={}) -> list:
+def get_all_Control_Sample_names_if_mode_not_empty(mode:str, settings:dict={}) -> list:
     """
     Grabs all control sample names from the db if the mode field is not empty.
     Used for eliminating already seen samples from processing.
@@ -55,7 +55,7 @@ def get_all_Control_Sample_names_if_mode_not_empty(settings:dict={}) -> list:
     """    
     session = Session(make_engine(settings=settings))
     samples = session.query(Control).filter(Control.submitted_date.is_not(None)).order_by(Control.submitted_date.desc()).all()
-    samples = [sample.name for sample in samples if not getattr(sample, settings['mode']) is None ]
+    samples = [sample.name for sample in samples if not getattr(sample, mode) is None ]
     logger.debug(f"Samples: {samples}")
     session.close()
     return samples
@@ -121,7 +121,7 @@ def get_control_type_by_id(type_id:int, settings:dict={}) -> ControlType:
         return None
     return ct
 
-def add_control_to_db(control:Control, settings:dict={}):
+def add_control_to_db(control:Control, mode:str, settings:dict={}):
     """
     Write function for control object.
 
@@ -134,7 +134,7 @@ def add_control_to_db(control:Control, settings:dict={}):
     check = session.query(Control).filter_by(name=control.name).first()
     if check:
         logger.warning(f"Object {check} already exists in database. Running update.")
-        setattr(check, settings['mode'], getattr(control, settings['mode']))
+        setattr(check, mode, getattr(control, mode))
     else:
         local_object = session.merge(control)
         session.add(local_object)
@@ -190,7 +190,7 @@ def convert_control_to_dict(control:Control) -> dict:
     return control
 
 
-def check_samples_against_database(settings:dict) -> list:
+def check_samples_against_database(settings:dict, mode:str) -> list:
     """
     Checks folder list against database to get new samples.
 
@@ -201,7 +201,7 @@ def check_samples_against_database(settings:dict) -> list:
         list: all sample folders whose name not in db.
     """    
     # check if mode column is empty.
-    db_samples = get_all_Control_Sample_names_if_mode_not_empty(settings)
+    db_samples = get_all_Control_Sample_names_if_mode_not_empty(mode=mode, settings=settings)
     logger.debug(f"Checking against: {db_samples}")
     project_dir = Path(settings['irida']['storage']).joinpath(settings['irida']['project_name'])
     logger.debug(f"Checked folder names: {[sample.name for sample in project_dir.iterdir() if sample.is_dir()]}")
