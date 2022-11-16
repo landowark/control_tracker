@@ -25,8 +25,8 @@ def cli(ctx, verbose, config):
 
 @cli.command("parse")
 @click.pass_context
-@click.option("-s", "--storage", help="Folder for storage of fastq files.")
-@click.option('--mode', type=click.Choice(['contains', 'matches', 'both']), default="both")
+@click.option("-s", "--storage", help="Folder for storage of fastq files. Overwrites config.yml path.")
+@click.option('--mode', type=click.Choice(['contains', 'matches', 'both']), default="both", help="Refseq_masher mode to be run. Defaults to 'both'.")
 def parse(ctx, storage, mode):
     if storage != None:
         ctx.obj['settings']['irida']['storage'] = storage
@@ -40,7 +40,7 @@ def parse(ctx, storage, mode):
 
 @cli.command("report")
 @click.pass_context
-@click.option("-o", "--output_dir", type=click.Path(exists=True), help="Folder for storage of reports.")
+@click.option("-o", "--output_dir", type=click.Path(exists=True), help="Folder for storage of reports. Overwrites config.yml path.")
 def report(ctx, output_dir):
     if output_dir != None:
         ctx.obj['settings']['folder']['output'] = output_dir

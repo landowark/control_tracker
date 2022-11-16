@@ -52,67 +52,61 @@ python controls DBinit
 
 # Usage.
 
-Note: All commands below will have to be executed in the folder and prepended with "python "
-
 ## controls
 
 ```shell
-python controls [OPTIONS] COMMAND [ARGS]...
+controls [OPTIONS] COMMAND [ARGS]...
 ```
 
 ### Options
 
 
-### -v(, --verbose()
+### -v, --verbose
 Set logging level to DEBUG if true.
 
 
-### -c(, --config( <config>)
+### -c, --config <config>
 Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml
 
 ### DBinit
 
 ```shell
-python controls DBinit [OPTIONS]
+controls DBinit [OPTIONS]
 ```
 
 ### parse
 
-This command will pull data from irida. config.yml must hold project info, username, password.
-
 ```shell
-python controls parse [OPTIONS]
+controls parse [OPTIONS]
 ```
 
 ### Options
 
 
-### -s(, --storage( <storage>)
-Folder for storage of fastq files.
+### -s, --storage <storage>
+Folder for storage of fastq files. Overwrites config.yml path.
 
 
-### --mode( <mode>)
-**Required**
+### --mode <mode>
+Refseq_masher mode to be run. Defaults to ‘both’.
 
 
 * **Options**
 
-    contains | matches
+    contains | matches | both
 
 
 ### report
 
-This command builds html and xlsx reports for the controls.
-
 ```shell
-python controls report [OPTIONS]
+controls report [OPTIONS]
 ```
 
 ### Options
 
 
-### -o(, --output_dir( <output_dir>)
-Folder for storage of reports.
+### -o, --output_dir <output_dir>
+Folder for storage of reports. Overwrites config.yml path.
 
 # Configuration file.
 
