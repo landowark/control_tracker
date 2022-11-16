@@ -76,6 +76,8 @@ controls DBinit [OPTIONS]
 
 ### parse
 
+Pulls fastq files from Irida, runs refseq_masher and stores results.
+
 ```shell
 controls parse [OPTIONS]
 ```
@@ -87,7 +89,7 @@ controls parse [OPTIONS]
 Folder for storage of fastq files. Overwrites config.yml path.
 
 
-### --mode <mode>
+### --mode <_mode_>
 Refseq_masher mode to be run. Defaults to ‘both’.
 
 
@@ -97,6 +99,8 @@ Refseq_masher mode to be run. Defaults to ‘both’.
 
 
 ### report
+
+Generates html and xlsx reports.
 
 ```shell
 controls report [OPTIONS]
