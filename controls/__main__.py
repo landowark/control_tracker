@@ -35,8 +35,8 @@ def parse(ctx, storage, mode):
         ctx.obj['settings']['mode'] = ['contains', 'matches']
     else:
         ctx.obj['settings']['mode'] = [mode]
-    click.echo(f"Using context: {ctx.obj}")
     main_parse(ctx.obj['settings'])
+    click.echo("The parse run has finished.")
     
 
 @cli.command("report")
@@ -47,6 +47,7 @@ def report(ctx, output_dir):
     if output_dir != None:
         ctx.obj['settings']['folder']['output'] = output_dir
     main_report(ctx.obj['settings'])
+    click.echo("The reports run has finished.")
 
 
 @cli.command("DBinit")

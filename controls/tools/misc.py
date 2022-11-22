@@ -2,6 +2,7 @@ import logging
 import re
 from datetime import datetime, date
 from pathlib import Path
+from difflib import get_close_matches
 
 
 logger = logging.getLogger("controls.tools.misc")
@@ -60,17 +61,23 @@ def parse_control_type_from_name(settings:dict, control_name:str) -> str:
 
     Returns:
         str: Parsed control type.
-    """    
-    regexes = [fr"{item}" for item in settings['ct_type_regexes']]
-    temp = '(?:% s)' % '|'.join(regexes)
-    # Note: matches here does not refer to the mode matches, but regex pattern matches.
-    matches = re.match(temp, control_name)
-    logger.debug(f"Regex matches: {matches}")
-    try:
-        ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
-    except AttributeError as e:
-        return None
-    return ct_type
+    """
+    if 'ct_type_regexes' in settings:
+        regexes = [fr"{item}" for item in settings['ct_type_regexes']]
+        temp = '(?:% s)' % '|'.join(regexes)
+        # Note: matches here does not refer to the mode matches, but regex pattern matches.
+        matches = re.match(temp, control_name)
+        logger.debug(f"Regex matches: {matches}")
+        try:
+            ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
+        except AttributeError as e:
+            return None
+        return ct_type
+    else:
+        logger.warning(f"No control regexes found, going to return closest match to list of control types.")
+        types = list(settings['control_types'].keys())
+        return get_close_matches(control_name, types)[0]
+    
 
 
 def parse_date(in_date:date) -> str:
@@ -136,7 +143,8 @@ def get_date_from_filepath(inpath:Path) -> date:
     # Okay, we want to hopefully parse the date from the filename.
     logger.debug(f"Running regex on: {inpath.absolute().__str__()}")
     date_regex = assemble_date_regex()
-    sub_date_raw = date_regex.match(inpath.absolute().__str__())
+    sub_date_raw = date_regex.search(inpath.absolute().__str__())
+    print(inpath.absolute().__str__(), sub_date_raw)
     if bool(sub_date_raw):
         logger.debug(f"Found date: {sub_date_raw.group()}")
         return create_date(sub_date_raw.group())

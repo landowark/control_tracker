@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from plotly.graph_objects import Figure
 import logging
+from .excel_functions import get_unique_values_in_df_column
 
 logger = logging.getLogger("controls.tools.vis_functions")
 
@@ -21,8 +22,40 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
     """    
     fig = Figure()
     df = df.dropna()
-    fig_contains = px.bar(df, x="submitted_date", y="contains_ratio", color="target", title=f"{group_name}_contains", barmode='stack', hover_data=["genus", "contains_hashes", "target"])
-    fig_matches = px.bar(df, x="submitted_date", y="matches_ratio", color="target", title=f"{group_name}_matches", barmode='stack', hover_data=["genus", "matches_hashes", "target"])
+    genera = []
+    for item in df['genus'].to_list():
+        try:
+            if item[-1] == "*":
+                genera.append(item[-1])    
+            else:
+                genera.append("")
+        except IndexError:
+            genera.append("")
+    # TODO: if there is only 'Off-Target' in targets, set visible to [True, False]
+    if len(get_unique_values_in_df_column(df, column_name='target')) == 2:
+        contains_vis = [True, True, False, False]
+        matches_vis = [False, False, True, True]
+    elif len(get_unique_values_in_df_column(df, column_name='target')) == 1:
+        contains_vis = [True, False]
+        matches_vis = [False, True]
+    fig_contains = px.bar(df, x="submitted_date", 
+        y="contains_ratio", 
+         
+        color="target", 
+        title=f"{group_name}_contains", 
+        barmode='stack', 
+        hover_data=["genus", "contains_hashes", "target"], 
+        text=genera
+    )
+    fig_matches = px.bar(df, x="submitted_date", 
+        y="matches_ratio", 
+        
+        color="target", 
+        title=f"{group_name}_matches", 
+        barmode='stack', 
+        hover_data=["genus", "matches_hashes", "target"], 
+        text=genera
+    )
     fig_contains.update_traces(visible=True)
     fig_matches.update_traces(visible=False)
     # Plotly express returns a full figure, so we have to use the data from that figure only.
@@ -32,6 +65,7 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
     fig.update_layout(
         barmode='stack',
         title=group_name,
+        yaxis_title="Hashes as Decimal (Stacked)",
         updatemenus=[
             dict(
                 type="buttons",
@@ -45,7 +79,7 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
                             label="Contains",
                             method="update",
                             args=[
-                                {"visible": [True, True, False, False]},
+                                {"visible": contains_vis},
                                 {"yaxis.title.text": "Contains Ratio"},
                             ],
                         ),
@@ -53,7 +87,7 @@ def create_stacked_bar_chart(settings:dict, df:pd.DataFrame, group_name:str) -> 
                             label="Matches",
                             method="update",
                             args=[
-                                {"visible": [False, False, True, True]},
+                                {"visible": matches_vis},
                                 {"yaxis.title.text": "Matches Ratio"},
                             ],
                         ),

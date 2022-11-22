@@ -34,7 +34,8 @@ def read_tsv(filein: str):
         logger.error(f"Could not find tsv file at {filein}. Returning empty dataframe.")
         df = DataFrame()
     logger.debug(f"Dataframe: {df}")
-    return df.dropna()
+    # return df.dropna()
+    return df
 
 
 def read_tsv_string(string_in:str) -> DataFrame:
@@ -123,7 +124,10 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
     targets = [val for pair in zip(targets1, targets2) for val in pair]
     for sample in group_in:
         # All should already have the same controltype
-        del sample['controltype']
+        try:
+            del sample['controltype']
+        except KeyError:
+            pass
     # Flatten dictionary.
     group_in = [flatten_dict(sample) for sample in group_in]
     logger.debug(f"Flattened dictionary: {group_in}")
@@ -137,8 +141,9 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
         .sort_values(by=sorts, ascending=ascending) \
         .reset_index().drop("index",1)
     df = df.dropna()
-    logger.debug(f"Writing to: {Path(output_dir).joinpath(group_name)}.xlsx")
-    df.to_excel(f"{Path(output_dir).joinpath(group_name)}.xlsx", engine="openpyxl")
+    if not "test" in settings:
+        logger.debug(f"Writing to: {Path(output_dir).joinpath(group_name)}.xlsx")
+        df.to_excel(f"{Path(output_dir).joinpath(group_name)}.xlsx", engine="openpyxl")
     return {group_name: df}
 
 
@@ -168,6 +173,7 @@ def create_df_from_flattened_dict(flatteneds:list, targets:list) -> list:
         columns = ['submitted_date', 'genus', 'target']
         columns[-1:-1] = [item for sublist in [[f"{mode}_ratio", f"{mode}_hashes"] for mode in modes] for item in sublist]
         df = df[columns].fillna("")
+        df.drop(df[(df.genus == "") | (df.genus == "NaN")].index, inplace=True)
         dfs.append(df)
     return dfs
 
@@ -199,3 +205,17 @@ def flatten_dict(d: MutableMapping, parent_key: str = '', sep: str ='.') -> Muta
             items.append((new_key, v))
     logger.debug(f"Here is the list of flattened dict: {items}")
     return dict(items)
+
+
+def get_unique_values_in_df_column(df: DataFrame, column_name: str) -> list:
+    """
+    _summary_
+
+    Args:
+        df (DataFrame): _description_
+        column_name (str): _description_
+
+    Returns:
+        list: _description_
+    """    
+    return sorted(df[column_name].unique())
