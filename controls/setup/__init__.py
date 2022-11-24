@@ -43,7 +43,7 @@ def enforce_settings_booleans(settings:dict) -> dict:
 
 
 
-def make_config(click_ctx:dict) -> dict:
+def make_config(click_ctx:dict={}) -> dict:
     """
     Grabs the settings from a config file.
 
@@ -55,9 +55,12 @@ def make_config(click_ctx:dict) -> dict:
     """
     
     # if user hasn't defined config path in cli args
-    if click_ctx['verbose']:
+    if 'verbose' in click_ctx and click_ctx['verbose']:
         handler = [item for item in logger.parent.handlers if item.name == "Stream"][0]
         handler.setLevel(logging.DEBUG)
+    # Had to put this in to handle initial call from main.py when creating modes
+    if not 'config' in click_ctx:
+        click_ctx['config'] = None
     logger.debug(f"Got {click_ctx['config']} for config file")
     if click_ctx['config'] == None:
         # Check user .config/controls directory

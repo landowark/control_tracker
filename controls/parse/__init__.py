@@ -6,6 +6,7 @@ from tools.subprocesses import run_refseq_masher, pull_from_irida, run_kraken
 from models import Control
 import logging
 from pathlib import Path
+import sys
 
 import json
 
@@ -14,6 +15,7 @@ logger = logging.getLogger("controls.parse")
 
 def main_parse(settings):
     logger.debug(f"PARSE Got settings passed down: {settings}")
+    
     logger.debug(f"Storage = {settings['irida']['storage']}")
     # Perform new pull from irida
     logger.debug(f"Pulling from irida with settings: {settings['irida']}")

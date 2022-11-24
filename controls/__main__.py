@@ -6,8 +6,15 @@ from parse import main_parse
 from report import main_report
 from tools.db_functions import create_control_types
 import yaml
+from pathlib import Path
+import sys
 
 logger = setup_logger()
+
+modes = list(make_config()['modes'].keys())
+modes_all = modes
+modes_all.append("all")
+# sys.exit(f"Testing mode setup complete: {modes_all}, exiting.")
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Set logging level to DEBUG if true.")
@@ -28,13 +35,13 @@ def cli(ctx, verbose, config):
 @click.pass_context
 @click.option("-s", "--storage", type=click.Path(exists=True), help="Folder for storage of fastq files. Overwrites config.yml path.")
 # TODO: Possibly load in modes from config.yml 
-@click.option('--mode', type=click.Choice(['contains', 'matches', 'kraken', 'all']), default="all", help="Refseq_masher mode to be run. Defaults to 'both'.")
+@click.option('--mode', type=click.Choice(modes_all), default="all", help="Refseq_masher mode to be run. Defaults to 'both'.")
 def parse(ctx, storage, mode):
     """Pulls fastq files from Irida, runs refseq_masher and stores results."""
     if storage != None:
         ctx.obj['settings']['irida']['storage'] = storage
     if mode == "all":
-        ctx.obj['settings']['mode'] = ['contains', 'matches', 'kraken']
+        ctx.obj['settings']['mode'] = modes
     else:
         ctx.obj['settings']['mode'] = [mode]
     main_parse(ctx.obj['settings'])

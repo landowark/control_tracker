@@ -193,7 +193,7 @@ def convert_control_to_dict(control:Control, settings:dict={}, engine:engine=Non
     if engine == None:
         engine = make_engine()
     control = control.__dict__
-    for mode in ["contains", "matches"]:
+    for mode in settings['modes']:
         try:
             control[mode] = json.loads(control[mode])
         except TypeError as e:

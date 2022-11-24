@@ -2,6 +2,7 @@ from tools.db_functions import get_all_Control_Types_names, convert_control_to_d
 from tools.excel_functions import construct_df_from_json
 from tools.vis_functions import create_stacked_bar_chart, output_figure
 import logging
+import sys
 
 logger = logging.getLogger("controls.report")
 
@@ -18,7 +19,7 @@ def main_report(settings:dict):
     ct_types = get_all_Control_Types_names(settings=settings)
     logger.debug(f"CT-TYPES: {ct_types}")
     # Construct dictionary assigning all controls of a type to that key.
-    by_type = {ct_type: [convert_control_to_dict(sample) for sample in get_all_samples_by_control_type(ct_type)] for ct_type in ct_types}
+    by_type = {ct_type: [convert_control_to_dict(sample, settings=settings) for sample in get_all_samples_by_control_type(ct_type)] for ct_type in ct_types}
     logger.debug(f"By type: {by_type}")
     # Convert dictionaries to dataframes (Also writes xlsx)
     by_type = [construct_df_from_json(settings=settings, group_name=group, group_in=by_type[group], output_dir=settings['folder']['output']) for group in by_type]
