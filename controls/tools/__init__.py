@@ -1,6 +1,6 @@
 import logging
 from .excel_functions import get_date_from_access
-from .misc import get_date_from_filepath, get_date_from_fastq_ctime
+from .misc import get_date_from_filepath, get_date_from_file_ctime
 from pathlib import Path
 from datetime import date
 from typing import Tuple
@@ -32,7 +32,7 @@ def enforce_valid_date(settings:dict, inpath:Path) -> Tuple[date, bool]:
             sub_date = None
     if sub_date == None:
         logger.debug(f"Old date methods failed. Falling back to fast creation time.")
-        sub_date = get_date_from_fastq_ctime(inpath=inpath)
+        sub_date = get_date_from_file_ctime(inpath=inpath, filetype="fastq")
         got_fastq_date = True
     return (sub_date, got_fastq_date)
     

@@ -1,6 +1,7 @@
 from subprocess import check_output, CalledProcessError 
 import logging
 import sys
+from pathlib import Path
 
 logger = logging.getLogger("controls.tools.subprocesses")
 
@@ -16,20 +17,40 @@ def run_refseq_masher(settings:dict, folder:str, mode:str):
         _type_: str
     """
     logger.debug(f"Attempting refseq_masher on {folder}...")
+    verbose = ""
     if settings['verbose']:
-        try:
-                out = check_output(['refseq_masher', '--verbose', mode, folder])
-                # logger.info(f"Refseq-masher result: {out}")
-                return out
-        except CalledProcessError as e:
-                logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
-    else:
-        try:
-                out = check_output(['refseq_masher', mode, folder])
-                # logger.info(f"Refseq-masher result: {out}")
-                return out
-        except CalledProcessError as e:
-                logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
+        verbose = "--verbose"
+    try:
+        out = check_output(['refseq_masher', verbose, mode, folder])
+        # logger.info(f"Refseq-masher result: {out}")
+        return out
+    except CalledProcessError as e:
+        logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
+#     else:
+#         try:
+#                 out = check_output(['refseq_masher', mode, folder])
+#                 # logger.info(f"Refseq-masher result: {out}")
+#                 return out
+#         except CalledProcessError as e:
+#                 logger.error(f"There was a problem running refseq_masher for {folder}: {e}.")
+
+def run_kraken(settings:dict, folder:str, fastQ_pair:tuple, tsv_file:str="kraken.tsv"):
+     logger.debug(f"Running Kraken2 on {fastQ_pair}")
+     file1 = fastQ_pair[0]
+     file2 = fastQ_pair[1]
+     try:
+        out = check_output(['kraken2', 
+                '--db', 
+                settings['kraken2']['db_path'], 
+                "--paired", 
+                "--report",
+                Path(folder).joinpath(tsv_file).absolute().__str__(), 
+                file1,
+                file2
+                ])
+        return out
+     except CalledProcessError as e:
+        logger.error(f"There was a problem running kraken for {folder}: {e}.")
 
 
 

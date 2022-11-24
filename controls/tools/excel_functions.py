@@ -11,31 +11,35 @@ logger = logging.getLogger("controls.tools.excel_functions")
 
 modes = ['contains', 'matches']
 
-def read_tsv(filein: str):
+def read_tsv(filein: str) -> str:
     """
-    Reads a tsv file into a pandas dataframe
+    Reads a tsv file into string
 
     Args:
         filein (str): path to the tsv file
 
     Returns:
-        Dataframe: tsv file contents as pandas dataframe
+        str: tsv file contents as string
     """
     if Path(filein).exists:
-        try:
-            df = pd.read_csv(filein, sep='\t', header=0)
-        except pd.errors.EmptyDataError as e:
-            logger.error(f"Got an empty contains data file: {filein}, returning None.")
-            return None
-        except FileNotFoundError as e:
-            logger.error(f"Somehow a non-existant file {filein} got past my check, returning None.")
-            return None
+        with open(filein, "r") as f:
+            text = f.read()
+        return text
+        # try:
+        #     df = pd.read_csv(filein, sep='\t', header=0)
+        # except pd.errors.EmptyDataError as e:
+        #     logger.error(f"Got an empty contains data file: {filein}, returning None.")
+        #     return None
+        # except FileNotFoundError as e:
+        #     logger.error(f"Somehow a non-existant file {filein} got past my check, returning None.")
+        #     return None
     else:
-        logger.error(f"Could not find tsv file at {filein}. Returning empty dataframe.")
-        df = DataFrame()
-    logger.debug(f"Dataframe: {df}")
-    # return df.dropna()
-    return df
+        logger.error(f"Could not find tsv file at {filein}. Returning None.")
+        return None
+    #     df = DataFrame()
+    # logger.debug(f"Dataframe: {df}")
+    # # return df.dropna()
+    # return df
 
 
 def read_tsv_string(string_in:str) -> DataFrame:

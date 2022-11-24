@@ -1,8 +1,8 @@
 from tools import enforce_valid_date
-from tools.excel_functions import read_tsv_string
+from tools.excel_functions import read_tsv_string, read_tsv
 from tools.db_functions import get_control_type_by_name, add_control_to_db, check_samples_against_database
-from tools.misc import write_output, parse_control_type_from_name, parse_sample_json, alter_genera_names
-from tools.subprocesses import run_refseq_masher, pull_from_irida
+from tools.misc import write_output, parse_control_type_from_name, parse_sample_json, alter_genera_names, get_relevant_fastq_files
+from tools.subprocesses import run_refseq_masher, pull_from_irida, run_kraken
 from models import Control
 import logging
 from pathlib import Path
@@ -34,23 +34,31 @@ def main_parse(settings):
         # Perform parsing of any new control samples.
         for folder in samples_of_interest:
             newControl = Control(name=Path(folder).name)
-            tsv_file = Path(folder).joinpath(f"{mode}.tsv")
+
+#################################################################################
+
+            tsv_file = Path(folder).joinpath(f"{newControl.name}_{mode}.tsv")
             sample_name = Path(folder).name
             # if a tsv_file already exists...
-            if Path(tsv_file).exists():
+            if Path(tsv_file).exists() or Path(f"{mode}.tsv").exists():
                 logger.debug(f"Existing tsv file: {tsv_file}, reading...")
-                with open(tsv_file, "r") as f:
-                    tsv_text = f.read()
+                tsv_text = read_tsv(tsv_file)
             # if no tsv file already exists...
             else:
-                logger.debug(f"No existing tsv file: {tsv_file}, running refseq_masher for {mode}")
-                tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__(), mode=mode)
-                logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
-                try:
-                    write_output(tsv_file, tsv_text)
-                except:
-                    logger.error("No tsv text found, using NONE")
-                    tsv_text = None
+                logger.debug(f"No existing tsv file: {tsv_file}, running analysis subprocess for {mode}")
+                if mode == 'kraken':
+                    # Note, refseqmasher's output to stdout will be captured, 
+                    # but kraken only writes raw output to stdout, we need its report
+                    run_kraken(settings=settings, folder=folder.__str__(), fastQ_pair=get_relevant_fastq_files(Path(folder)), tsv_file=tsv_file)
+                    tsv_text = read_tsv(tsv_file)
+                else:
+                    tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__(), mode=mode)
+                    logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
+                    try:
+                        write_output(tsv_file, tsv_text)
+                    except:
+                        logger.error("No tsv text found, using NONE")
+                        tsv_text = None
             # If there's an error running refseq we're going make some dummy data from the test files with headers only to fill in the gap
             if tsv_text == None:
                 logger.error(f"Failed to write {mode}.tsv file due to error, Using dummy data.")
@@ -72,9 +80,6 @@ def main_parse(settings):
                 logger.warning(f"JSON for {Path(folder).name} was NONE. Using empty dict instead.")
                 reads_json = {}
             # Insert data into Control object 'mode' (contains or matches) column
-            
-            if mode != "matches":
-                logger.debug(f"{mode} for {Path(folder).name}: {getattr(newControl, mode)}")
             logger.debug(f"Attempting to find date with format (YYYY-MM-DD) in folder path.")
             # Uses the old_db_path -- if it's set -- to avoid having to input it for each sample.
             newControl.submitted_date, got_fastq_date = enforce_valid_date(settings=settings, inpath=Path(folder))

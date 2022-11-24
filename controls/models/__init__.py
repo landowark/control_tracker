@@ -39,4 +39,5 @@ class Control(Base):
     submitted_date = Column(TIMESTAMP) #: Date submitted to Robotics
     contains = Column(JSON) #: unstructured hashes in contains.tsv for each organism
     matches = Column(JSON) #: unstructured hashes in matches.tsv for each organism
+    kraken = Column(JSON) #: unstructured output from kraken_report
     # UniqueConstraint('name', name='uq_control_name')

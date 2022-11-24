@@ -3,6 +3,7 @@ import re
 from datetime import datetime, date
 from pathlib import Path
 from difflib import get_close_matches
+from typing import Tuple
 
 
 logger = logging.getLogger("controls.tools.misc")
@@ -106,9 +107,17 @@ def parse_sample_json(json_in:dict, mode:str) -> dict:
 
     Returns:
         dict: flattened dictionary.
-    """    
+    """
+    logger.debug(f"Parsing sample json: {mode}") 
+    if mode == "contains" or mode == "matches":
+        new_dict = process_refseq_dict(json_in=json_in, mode=mode)
+    elif mode == "kraken":
+        new_dict = process_kraken_dict(json_in=json_in)
+    return new_dict
+
+
+def process_refseq_dict(json_in:dict, mode:str) -> dict:
     new_dict = {}
-    # logger.debug(f"Parsing sample json: {json_in}")
     for top_key in json_in.keys():
         genus = json_in[top_key]['taxonomic_genus']
         if mode == "contains":
@@ -129,6 +138,24 @@ def parse_sample_json(json_in:dict, mode:str) -> dict:
             new_dict[genus][f'{mode}_hashes'] = hashes
             new_dict[genus][f'{mode}_ratio'] = split_ratio
     return new_dict
+
+
+def process_kraken_dict(json_in:dict, mode:str="kraken") -> dict:
+    new_dict = {}
+    for top_key in json_in.keys():
+        if json_in[top_key]["U"] == "G":
+            genus = json_in[top_key]["unclassified"].strip()
+            new_dict[genus] = {}
+            for ii, (k, v) in enumerate(json_in[top_key].items()):
+                # Due to varying number of whitespaces in json, have to fall back to string contains.
+                # logger.debug(f"Key {ii} in json_in: {k.strip()}")
+                if ii == 0:
+                    new_dict[genus]['percent_reads'] = v
+                elif ii == 1:
+                    new_dict[genus]['number_reads'] = v
+    return new_dict
+
+
 
 def get_date_from_filepath(inpath:Path) -> date:
     """
@@ -152,22 +179,33 @@ def get_date_from_filepath(inpath:Path) -> date:
         return None
         
         
-def get_date_from_fastq_ctime(inpath: Path) -> date:
+def get_date_from_file_ctime(inpath: Path, filetype:str="") -> date:
     """
     Returns a valid date from fastq creation time
 
     Args:
-        inpath (Path): folder being parsed
+        inpath (Path): file being parsed. If file is a directory, takes most recent file.
 
     Returns:
         date: submitted date.
-    """          
-    relevant_file = list(inpath.glob('*.fastq'))[0]
+    """
+    if inpath.is_dir():
+        relevant_file = get_most_recent_file(list(inpath.glob(f'*.{filetype}')))
+    else:
+        relevant_file = inpath
     logger.warning(f"Finding date from fastq creation time of {relevant_file}.")
     try:
         return datetime.fromtimestamp(relevant_file.stat().st_ctime).date()
     except:
         return None
+
+    
+def get_most_recent_file(infiles:list) -> Path:
+    print([f"{file}: {datetime.fromtimestamp(file.stat().st_ctime).date()}" for file in infiles])
+    most_recent_date = max([datetime.fromtimestamp(file.stat().st_ctime).date() for file in infiles])
+    most_recent_file = [file for file in infiles if get_date_from_file_ctime(file) == most_recent_date][0]
+    return most_recent_file
+
 
 def alter_genera_names(input_dict:dict) -> dict:
     """
@@ -180,3 +218,16 @@ def alter_genera_names(input_dict:dict) -> dict:
         dict: output dictionary
     """    
     return {f"{k}*":v for k,v in input_dict.items() if k != 'nan'}
+
+
+def get_relevant_fastq_files(folder:Path) -> Tuple[Path, Path]:
+    fastqs = list(folder.glob('*.fastq'))
+    if len(fastqs) == 2:
+        return tuple(fastqs)
+    elif len(fastqs) > 2:
+        logger.debug(f"Got more than 2 fastq files in {folder.__str__()}. Attempting to pare down pairs.")
+        most_recent = get_date_from_file_ctime(get_most_recent_file(fastqs))
+        fastqs = [item.absolute().__str__() for item in fastqs if get_date_from_file_ctime(item) == most_recent]
+        return tuple(fastqs)
+    else:
+        logger.error("Non-standard number of fastq ")
