@@ -12,7 +12,8 @@ import sys
 logger = setup_logger()
 
 modes = list(make_config()['modes'].keys())
-modes_all = modes
+# Have to make copy to avoid append being applied to modes
+modes_all = modes.copy()
 modes_all.append("all")
 # sys.exit(f"Testing mode setup complete: {modes_all}, exiting.")
 
@@ -44,6 +45,7 @@ def parse(ctx, storage, mode):
         ctx.obj['settings']['mode'] = modes
     else:
         ctx.obj['settings']['mode'] = [mode]
+    # click.echo(ctx.obj['settings'])
     main_parse(ctx.obj['settings'])
     click.echo("The parse run has finished.")
     

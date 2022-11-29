@@ -10,3 +10,4 @@ sqlalchemy
 zipp
 openpyxl
 refseq_masher=0.1.2=py_0
+kraken2=2.1.2=pl5321h9f5acd7_2

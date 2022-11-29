@@ -1,5 +1,4 @@
 import json
-from tkinter import N
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, engine
 from models import *
@@ -192,6 +191,8 @@ def convert_control_to_dict(control:Control, settings:dict={}, engine:engine=Non
     """
     if engine == None:
         engine = make_engine()
+    logger.debug(f"Attempting dictionary creation of {control.name}")
+    name = control.name
     control = control.__dict__
     for mode in settings['modes']:
         try:
@@ -208,6 +209,7 @@ def convert_control_to_dict(control:Control, settings:dict={}, engine:engine=Non
     except KeyError:
         pass
     control['submitted_date'] = parse_date(control['submitted_date'])
+    control['name'] = name
     try:
         control['controltype'] = get_control_type_by_id(type_id=control['parent_id'], engine=engine).__dict__
         del control['controltype']['_sa_instance_state']

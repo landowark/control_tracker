@@ -52,110 +52,6 @@ def create_date(raw_date:str) -> date:
         return datetime.strptime(raw_date, "%Y%m%d").date()
         
 
-def parse_control_type_from_name(settings:dict, control_name:str) -> str:
-    """
-    Checks for control type in string. Uses joined ct_type_regexes defined in config.yml and pulled into settings. 
-
-    Args:
-        settings (dict): Settings passed down from click.
-        control_name (str): Sample name
-
-    Returns:
-        str: Parsed control type.
-    """
-    if 'ct_type_regexes' in settings:
-        regexes = [fr"{item}" for item in settings['ct_type_regexes']]
-        temp = '(?:% s)' % '|'.join(regexes)
-        # Note: matches here does not refer to the mode matches, but regex pattern matches.
-        matches = re.match(temp, control_name)
-        logger.debug(f"Regex matches: {matches}")
-        try:
-            ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
-        except AttributeError as e:
-            return None
-        return ct_type
-    else:
-        logger.warning(f"No control regexes found, going to return closest match to list of control types.")
-        types = list(settings['control_types'].keys())
-        return get_close_matches(control_name, types)[0]
-    
-
-
-def parse_date(in_date:date) -> str:
-    """
-    Creates date string from date object
-
-    Args:
-        in_date (date): input date object
-
-    Returns:
-        str: string in the format %Y-%m-%d
-    """        
-    try:
-        return in_date.strftime("%Y-%m-%d")
-    except AttributeError as e:
-        return None
-
-
-def parse_sample_json(json_in:dict, mode:str) -> dict:
-    """
-    Converts sample dictionary into more convenient organization. Constructs hash ratios, sheds extraneous data.
-
-    Args:
-        json_in (dict): sample data from tsv in
-        mode (str): "contains" or "matches" for proper parsing of column names.
-
-    Returns:
-        dict: flattened dictionary.
-    """
-    logger.debug(f"Parsing sample json: {mode}") 
-    if mode == "contains" or mode == "matches":
-        new_dict = process_refseq_dict(json_in=json_in, mode=mode)
-    elif mode == "kraken":
-        new_dict = process_kraken_dict(json_in=json_in)
-    return new_dict
-
-
-def process_refseq_dict(json_in:dict, mode:str) -> dict:
-    new_dict = {}
-    for top_key in json_in.keys():
-        genus = json_in[top_key]['taxonomic_genus']
-        if mode == "contains":
-            hashes = json_in[top_key]['shared_hashes']
-        if mode == "matches":
-            hashes = json_in[top_key]['matching']
-        split_ratio = int(hashes.split("/")[0]) / int(hashes.split("/")[1])
-        if genus in new_dict.keys():
-            if f"{mode}_ratio" in new_dict[genus]:
-                if  split_ratio > new_dict[genus][f'{mode}_ratio']:
-                    new_dict[genus][f'{mode}_ratio'] = split_ratio
-                    new_dict[genus][f'{mode}_hashes'] = hashes
-            else:
-                new_dict[genus][f'{mode}_ratio'] = split_ratio
-                new_dict[genus][f'{mode}_hashes'] = hashes
-        else:
-            new_dict[genus] = {}
-            new_dict[genus][f'{mode}_hashes'] = hashes
-            new_dict[genus][f'{mode}_ratio'] = split_ratio
-    return new_dict
-
-
-def process_kraken_dict(json_in:dict, mode:str="kraken") -> dict:
-    new_dict = {}
-    for top_key in json_in.keys():
-        if json_in[top_key]["U"] == "G":
-            genus = json_in[top_key]["unclassified"].strip()
-            new_dict[genus] = {}
-            for ii, (k, v) in enumerate(json_in[top_key].items()):
-                # Due to varying number of whitespaces in json, have to fall back to string contains.
-                # logger.debug(f"Key {ii} in json_in: {k.strip()}")
-                if ii == 0:
-                    new_dict[genus]['percent_reads'] = v
-                elif ii == 1:
-                    new_dict[genus]['number_reads'] = v
-    return new_dict
-
-
 
 def get_date_from_filepath(inpath:Path) -> date:
     """
@@ -231,3 +127,127 @@ def get_relevant_fastq_files(folder:Path) -> Tuple[Path, Path]:
         return tuple(fastqs)
     else:
         logger.error("Non-standard number of fastq ")
+
+
+def parse_control_type_from_name(settings:dict, control_name:str) -> str:
+    """
+    Checks for control type in string. Uses joined ct_type_regexes defined in config.yml and pulled into settings. 
+
+    Args:
+        settings (dict): Settings passed down from click.
+        control_name (str): Sample name
+
+    Returns:
+        str: Parsed control type.
+    """
+    if 'ct_type_regexes' in settings:
+        regexes = [fr"{item}" for item in settings['ct_type_regexes']]
+        # I have no idea what this is doing.
+        temp = '(?:% s)' % '|'.join(regexes)
+        # Note: matches here does not refer to the mode matches, but regex pattern matches.
+        matches = re.match(temp, control_name)
+        logger.debug(f"Regex matches: {matches}")
+        try:
+            ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
+        except AttributeError as e:
+            return None
+        return ct_type
+    else:
+        logger.warning(f"No control regexes found, going to return closest match to list of control types.")
+        types = list(settings['control_types'].keys())
+        return get_close_matches(control_name, types)[0]
+    
+
+
+def parse_date(in_date:date) -> str:
+    """
+    Creates date string from date object
+
+    Args:
+        in_date (date): input date object
+
+    Returns:
+        str: string in the format %Y-%m-%d
+    """        
+    try:
+        return in_date.strftime("%Y-%m-%d")
+    except AttributeError as e:
+        return None
+
+
+def parse_sample_json(json_in:dict, mode:str) -> dict:
+    """
+    Converts sample dictionary into more convenient organization. Constructs hash ratios, sheds extraneous data.
+
+    Args:
+        json_in (dict): sample data from tsv in
+        mode (str): "contains" or "matches" for proper parsing of column names.
+
+    Returns:
+        dict: flattened dictionary.
+    """
+    logger.debug(f"Parsing sample json: {mode}") 
+    if mode == "contains" or mode == "matches":
+        func = function_map["parse_refseq_dict"]
+    else:
+        func = function_map[f"parse_{mode}_dict"]
+    return func(json_in=json_in, mode=mode)
+
+
+# Below are the individual parsing functions. They must be named "process_{mode}_dict" and 
+# take only json_in and mode to hook into the main processor.
+
+
+def parse_refseq_dict(json_in:dict, mode:str) -> dict:
+    new_dict = {}
+    for top_key in json_in.keys():
+        genus = json_in[top_key]['taxonomic_genus']
+        if mode == "contains":
+            hashes = json_in[top_key]['shared_hashes']
+        if mode == "matches":
+            hashes = json_in[top_key]['matching']
+        split_ratio = int(hashes.split("/")[0]) / int(hashes.split("/")[1])
+        if genus in new_dict.keys():
+            if f"{mode}_ratio" in new_dict[genus]:
+                if  split_ratio > new_dict[genus][f'{mode}_ratio']:
+                    new_dict[genus][f'{mode}_ratio'] = split_ratio
+                    new_dict[genus][f'{mode}_hashes'] = hashes
+            else:
+                new_dict[genus][f'{mode}_ratio'] = split_ratio
+                new_dict[genus][f'{mode}_hashes'] = hashes
+        else:
+            new_dict[genus] = {}
+            new_dict[genus][f'{mode}_hashes'] = hashes
+            new_dict[genus][f'{mode}_ratio'] = split_ratio
+    return new_dict
+
+
+def parse_kraken_dict(json_in:dict, mode:str) -> dict:
+    new_dict = {}
+    for top_key in json_in.keys():
+        if json_in[top_key]["U"] == "G":
+            genus = json_in[top_key]["unclassified"].strip()
+            new_dict[genus] = {}
+            for ii, (k, v) in enumerate(json_in[top_key].items()):
+                # Due to varying keys in the json, have to fall back to indexing.
+                # logger.debug(f"Key {ii} in json_in: {k.strip()}")
+                if ii == 0:
+                    new_dict[genus][f'{mode}_percent'] = v
+                elif ii == 1:
+                    new_dict[genus][f'{mode}_count'] = v
+    return new_dict
+
+
+########This must be at bottom of module###########
+
+function_map = {}
+for item in dict(locals().items()):
+    try:
+        if dict(locals().items())[item].__module__ == __name__:
+            try:
+                function_map[item] = dict(locals().items())[item]
+            except KeyError:
+                pass
+    except AttributeError:
+        pass
+###################################################

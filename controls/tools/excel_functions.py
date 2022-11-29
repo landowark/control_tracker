@@ -6,7 +6,8 @@ from pathlib import Path
 from collections.abc import MutableMapping
 from numpy import array as npa
 from io import StringIO
-import sys
+import re
+
 
 logger = logging.getLogger("controls.tools.excel_functions")
 
@@ -123,7 +124,7 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
         dict: _description_
     """    
     # 
-    logger.debug(f"Group in: {group_in}")
+    # logger.debug(f"Group in: {group_in}")
     targets1 = group_in[0]['controltype']['targets']
     targets2 = [f"{target}*" for target in targets1]
     targets = [val for pair in zip(targets1, targets2) for val in pair]
@@ -135,13 +136,13 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
             pass
     # Flatten dictionary.
     group_in = [flatten_dict(sample) for sample in group_in]
-    logger.debug(f"Flattened dictionary: {group_in}")
-    sorts = ['submitted_date', "genus"]
+    # logger.debug(f"Flattened dictionary: {group_in}")
+    sorts = ['submitted_date', "target", "genus"]
     sorts[-1:-1] = [settings['modes'][mode][0] for mode in settings['modes']]
-    print(sorts)
+    
     # Set descending for any columns that have "{mode}" in the header.
-    ascending = [False if item.split("_")[0] in settings['modes'] else True for item in sorts]
-    logger.debug(f"Ascending: {list(zip(sorts, ascending))}")
+    ascending = [False if item.split("_")[0] in settings['modes'] or item == "target" else True for item in sorts]
+    # logger.debug(f"Ascending: {list(zip(sorts, ascending))}")
     # create and merge dataframes.
     df = pd.concat(create_df_from_flattened_dict(settings=settings, flatteneds=group_in, targets=targets)) \
         .sort_values(by=sorts, ascending=ascending) \
@@ -167,27 +168,23 @@ def create_df_from_flattened_dict(settings:dict, flatteneds:list, targets:list) 
     dfs = []
     for item in flatteneds:
         df = DataFrame()
-        del item['name']
+        
         logger.debug(f"Item we're trying to DFify: {item['submitted_date']}")
         my_date = item.pop("submitted_date")
+        my_name = item.pop("name")
+        # logger.debug(item)
         df['genus'] = [genus.replace("contains.", "").replace(".contains_hashes", "") for genus in item if ".contains_hashes" in genus]
         df['submitted_date'] = my_date
-        df['target'] = df['genus'].apply(lambda x: "Target" if x in targets else "Off-target")
-# TODO: Generify this for the inclusion of kraken data.
-##################################################################        
-        columns = ['submitted_date', 'genus', 'target']
+        df['name'] = my_name
+        df['target'] = df['genus'].apply(lambda x: "Target" if x in targets else "Off-target")    
+        columns = ['name', 'submitted_date', 'genus', 'target']
         for mode in settings['modes']:
             for col in settings['modes'][mode]:
                 df[col] = pd.Series(npa([item[genus] for genus in item if col in genus]))
                 # df[f'{mode}_hashes'] = pd.Series(npa([item[genus] for genus in item if f"{mode}_hashes" in genus]))
         columns[-1:-1] = [item for sublist in [settings['modes'][mode] for mode in settings['modes']] for item in sublist]
-        print(columns)
-        # columns = ['submitted_date', 'genus', 'target']
-        # columns[-1:-1] = [item for sublist in [[f"{mode}_ratio", f"{mode}_hashes"] for mode in settings['modes']] for item in sublist]
-##################################################################        
         df = df[columns].fillna("")
         df.drop(df[(df.genus == "") | (df.genus == "NaN")].index, inplace=True)
-        print(df)
         dfs.append(df)
     return dfs
 
@@ -206,18 +203,18 @@ def flatten_dict(d: MutableMapping, parent_key: str = '', sep: str ='.') -> Muta
     """    
     items = []
     for k, v in d.items():
-        logger.debug(f"Attempting flatten with {k} as key and {v} as value.")
+        # logger.debug(f"Attempting flatten with {k} as key and {v} as value.")
         try:
             new_key = parent_key + sep + k if parent_key else k
         except TypeError as e:
             logger.error("Got None as key, skipping...")
             continue
-        logger.debug(f"Flattening dict using new key: {new_key}")
+        # logger.debug(f"Flattening dict using new key: {new_key}")
         if isinstance(v, MutableMapping):
             items.extend(flatten_dict(v, new_key, sep=sep).items())
         else:
             items.append((new_key, v))
-    logger.debug(f"Here is the list of flattened dict: {items}")
+    # logger.debug(f"Here is the list of flattened dict: {items}")
     return dict(items)
 
 
@@ -233,3 +230,19 @@ def get_unique_values_in_df_column(df: DataFrame, column_name: str) -> list:
         list: _description_
     """    
     return sorted(df[column_name].unique())
+
+
+def drop_reruns_from_df(settings:dict, df: DataFrame) -> DataFrame:
+    sample_names = get_unique_values_in_df_column(df, column_name="name")
+    if 'rerun_regex' in settings:
+        logger.debug(f"Compiling regex from: {settings['rerun_regex']}")
+        rerun_regex = re.compile(fr"{settings['rerun_regex']}")
+        for sample in sample_names:
+            logger.debug(f'Running search on {sample}')
+            if rerun_regex.search(sample):
+                logger.debug(f'Match on {sample}')
+                first_run = re.sub(rerun_regex, "", sample)
+                logger.debug(f"First run: {first_run}")
+                df = df.drop(df[df.name == first_run].index)
+        return df
+

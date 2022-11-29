@@ -25,42 +25,41 @@ def main_parse(settings):
         logger.debug(f"Running parse for {mode}")
         # compare storage after pull to samples already in the database and remove any that are the same.
         samples_of_interest = check_samples_against_database(settings=settings, mode=mode)
-        try:
-            if Path(settings['folder']['old_db_path']).exists():
-                old_db_path = settings['folder']['old_db_path']
-            else:
-                old_db_path = ""
-        except TypeError as e:
-            logger.error("No old_db_path, setting to ''")
-            old_db_path = ""
         # Perform parsing of any new control samples.
         for folder in samples_of_interest:
-            newControl = Control(name=Path(folder).name)
-
-#################################################################################
-
-            tsv_file = Path(folder).joinpath(f"{newControl.name}_{mode}.tsv")
             sample_name = Path(folder).name
+            newControl = Control(name=sample_name)
+            tsv_file = Path(folder).joinpath(f"{sample_name}_{mode}.tsv")
+            # Get the control type from the database.
+            ct_name = parse_control_type_from_name(settings=settings, control_name=sample_name)
+            if ct_name == None:
+                logger.error(f"Couldn't get control type name from {sample_name}.")
+            try:
+                ct_name = ct_name.replace("_", "-")
+            except  AttributeError as e:
+                logger.error(f"Control type name is NONE, skipping this sample.")
+                continue
+            logger.debug(f"Control Type Name: {ct_name}")
+            # We need to get the object in order to get the targets
+            ct_type = get_control_type_by_name(ct_name, settings=settings)
+            newControl.controltype = ct_type
             # if a tsv_file already exists...
-            if Path(tsv_file).exists() or Path(f"{mode}.tsv").exists():
+            if Path(tsv_file).exists():
                 logger.debug(f"Existing tsv file: {tsv_file}, reading...")
                 tsv_text = read_tsv(tsv_file)
+            elif Path(folder).joinpath(f"{mode}.tsv").exists():
+                tsv_text = read_tsv(Path(folder).joinpath(f"{mode}.tsv"))
+                write_output(tsv_file, tsv_text)
             # if no tsv file already exists...
             else:
                 logger.debug(f"No existing tsv file: {tsv_file}, running analysis subprocess for {mode}")
-                if mode == 'kraken':
-                    # Note, refseqmasher's output to stdout will be captured, 
-                    # but kraken only writes raw output to stdout, we need its report
-                    run_kraken(settings=settings, folder=folder.__str__(), fastQ_pair=get_relevant_fastq_files(Path(folder)), tsv_file=tsv_file)
-                    tsv_text = read_tsv(tsv_file)
+# TODO: More stuff like this, for the json parser.
+                # setting parse function based on the mode
+                if mode == "contains" or mode == "matches":
+                    func = function_map["process_refseq_masher"]
                 else:
-                    tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__(), mode=mode)
-                    logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
-                    try:
-                        write_output(tsv_file, tsv_text)
-                    except:
-                        logger.error("No tsv text found, using NONE")
-                        tsv_text = None
+                    func = function_map[f"process_{mode}"]
+                tsv_text = func(settings=settings, folder=folder.__str__(), mode=mode, tsv_file=tsv_file)
             # If there's an error running refseq we're going make some dummy data from the test files with headers only to fill in the gap
             if tsv_text == None:
                 logger.error(f"Failed to write {mode}.tsv file due to error, Using dummy data.")
@@ -89,21 +88,44 @@ def main_parse(settings):
                 logger.warning(f"Got date from fastq file, adding asterisks to genera names.")
                 reads_json = alter_genera_names(reads_json)
             setattr(newControl, mode, json.dumps(reads_json))
-            ct_name = parse_control_type_from_name(settings=settings, control_name=sample_name)
-            if ct_name == None:
-                logger.error(f"Couldn't get control type name from {sample_name}.")
-            try:
-                ct_name = ct_name.replace("_", "-")
-            except  AttributeError as e:
-                logger.error(f"Control type name is NONE.")
-            logger.debug(f"Control Type Name: {ct_name}")
-            # We need to get the object in order to get the targets
-            ct_type = get_control_type_by_name(ct_name, settings=settings)
-            newControl.controltype = ct_type
-            # No sense adding to db if nothing to add.
             if getattr(newControl, mode) == json.dumps({}) and newControl.submitted_date == None:
                 logger.warning(f"Sample {newControl.name} has no {settings['mode']} or date. Skipping")
                 continue
             else:
                 add_control_to_db(newControl, mode=mode, settings=settings)
     logger.info("The PARSE run has ended.")
+
+
+# Below this point are the individual parsing functions. They must be named "parse_{mode name}" and
+# take only settings, folder, mode and tsv_file in order to hook into the main function
+
+
+def process_refseq_masher(settings:dict, folder:str, mode:str, tsv_file:Path):
+    tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__(), mode=mode)
+    logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
+    try:
+        write_output(tsv_file, tsv_text)
+    except:
+        logger.error("No tsv text found, using NONE")
+        tsv_text = None
+    return tsv_text
+
+
+def process_kraken(settings:dict, folder:str, mode:str, tsv_file:Path):
+    run_kraken(settings=settings, folder=folder.__str__(), fastQ_pair=get_relevant_fastq_files(Path(folder)), tsv_file=tsv_file)
+    return read_tsv(tsv_file)
+
+
+########This must be at bottom of module###########
+
+function_map = {}
+for item in dict(locals().items()):
+    try:
+        if dict(locals().items())[item].__module__ == __name__:
+            try:
+                function_map[item] = dict(locals().items())[item]
+            except KeyError:
+                pass
+    except AttributeError:
+        pass
+###################################################
