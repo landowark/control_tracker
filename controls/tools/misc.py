@@ -238,6 +238,11 @@ def parse_kraken_dict(json_in:dict, mode:str) -> dict:
     return new_dict
 
 
+def divide_chunks(input_list, chunk_count):
+    # looping till length l
+    k, m = divmod(len(input_list), chunk_count)
+    return (input_list[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(chunk_count))
+
 ########This must be at bottom of module###########
 
 function_map = {}
