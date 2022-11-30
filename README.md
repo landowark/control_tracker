@@ -6,6 +6,7 @@ contain the root `toctree` directive. -->
 
 This project was created to parse the output of refseq_masher on an Irida project using its ```parse``` command and store that output in a local SQLite database. It can then create seperate time series html files (example below) for each class of sample from the project using its ```report``` command.
 
+
 ![Sample Report](img/example_plot.png)
 
 # Installation
