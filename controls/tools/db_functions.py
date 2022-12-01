@@ -278,7 +278,7 @@ def create_control_types(settings:dict, engine:engine=None) -> None:
         session = Session(engine)
     for item in settings['control_types']:
         logger.debug(f"Creating control type {item}")
-        ct = ControlType(name=item, targets=settings['control_types'][item])
+        ct = ControlType(name=item, targets=settings['control_types'][item]['targets'])
         session.add(ct)
     session.commit()
     session.close()

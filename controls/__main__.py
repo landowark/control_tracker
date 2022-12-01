@@ -5,9 +5,6 @@ from setup import make_config, setup_logger
 from parse import main_parse
 from report import main_report
 from tools.db_functions import create_control_types
-import yaml
-from pathlib import Path
-import sys
 
 logger = setup_logger()
 
@@ -15,7 +12,7 @@ modes = list(make_config()['modes'].keys())
 # Have to make copy to avoid append being applied to modes
 modes_all = modes.copy()
 modes_all.append("all")
-# sys.exit(f"Testing mode setup complete: {modes_all}, exiting.")
+
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, default=False, help="Set logging level to DEBUG if true.")

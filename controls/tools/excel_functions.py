@@ -233,6 +233,16 @@ def get_unique_values_in_df_column(df: DataFrame, column_name: str) -> list:
 
 
 def drop_reruns_from_df(settings:dict, df: DataFrame) -> DataFrame:
+    """
+    Removes semi-duplicates from dataframe after finding sequencing repeats.
+
+    Args:
+        settings (dict): settings passed down from click
+        df (DataFrame): initial dataframe
+
+    Returns:
+        DataFrame: dataframe with originals removed in favour of repeats.
+    """    
     sample_names = get_unique_values_in_df_column(df, column_name="name")
     if 'rerun_regex' in settings:
         logger.debug(f"Compiling regex from: {settings['rerun_regex']}")

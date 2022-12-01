@@ -2,13 +2,13 @@ from tools.db_functions import get_all_Control_Types_names, convert_control_to_d
 from tools.excel_functions import construct_df_from_json
 from tools.vis_functions import create_charts, output_figures
 import logging
-import sys
+from datetime import datetime
 
 logger = logging.getLogger("controls.report")
 
 def main_report(settings:dict):
     """
-    Performs all functions of making a report.
+    Performs all decision making and function assignment of reports.
 
     Args:
         settings (dict): Settings passed down from click.
@@ -31,4 +31,4 @@ def main_report(settings:dict):
         figs = create_charts(settings=settings, df=ct_type[group_name], group_name=group_name)
         # Write bar chart to html file.
         output_figures(settings=settings, figs=figs, group_name=group_name)
-    logger.info("The REPORT run has ended.")
+    logger.info(f"The REPORT run has ended as {datetime.now()}.")

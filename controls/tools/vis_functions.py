@@ -1,7 +1,7 @@
 import plotly.express as px
 import pandas as pd
 from pathlib import Path
-from plotly.graph_objects import Figure, Layout, Bar
+from plotly.graph_objects import Figure
 import logging
 from .excel_functions import get_unique_values_in_df_column, drop_reruns_from_df
 from .misc import divide_chunks
@@ -62,6 +62,16 @@ def create_charts(settings:dict, df:pd.DataFrame, group_name:str) -> list:
 
 
 def generic_figure_markers(fig:Figure, modes:list=[]) -> Figure:
+    """
+    Adds standard layout to figure.
+
+    Args:
+        fig (Figure): Input figure.
+        modes (list, optional): List of modes included in figure. Defaults to [].
+
+    Returns:
+        Figure: Output figure with updated titles, rangeslider, buttons.
+    """    
     # Creating visibles list for each mode.
     fig.update_layout(
         xaxis_title="Submitted Date (* - Date parsed from fastq file creation date)",
@@ -97,6 +107,16 @@ def generic_figure_markers(fig:Figure, modes:list=[]) -> Figure:
 
 
 def make_buttons(modes:list, fig_len:int) -> list:
+    """
+    Creates list of buttons with one for each mode.
+
+    Args:
+        modes (list): list of modes used by main parser.
+        fig_len (int): number of traces in the figure
+
+    Returns:
+        list: list of buttons.
+    """    
     buttons = []
     if len(modes) > 0:
         for ii, mode in enumerate(modes):
@@ -138,6 +158,18 @@ def output_figures(settings:dict, figs:list, group_name:str):
 # take only json_in and mode to hook into the main processor.
 
 def construct_refseq_chart(settings:dict, df:pd.DataFrame, group_name:str, mode:str) -> Figure:
+    """
+    Constructs intial refseq chart for both contains and matches.
+
+    Args:
+        settings (dict): settings passed down from click.
+        df (pd.DataFrame): dataframe containing all sample data for the group.
+        group_name (str): name of the group being processed.
+        mode (str): contains or matches, overwritten by hardcoding, so don't think about it too hard.
+
+    Returns:
+        Figure: initial figure with contains and matches traces.
+    """    
     # This overwrites the mode from the signature, might get confusing.
     fig = Figure()
     modes = ['contains', 'matches']
@@ -158,6 +190,18 @@ def construct_refseq_chart(settings:dict, df:pd.DataFrame, group_name:str, mode:
 
 
 def construct_kraken_chart(settings:dict, df:pd.DataFrame, group_name:str, mode:str) -> Figure:
+    """
+    Constructs intial refseq chart for each mode in the kraken config settings.
+
+    Args:
+        settings (dict): settings passed down from click.
+        df (pd.DataFrame): dataframe containing all sample data for the group.
+        group_name (str): name of the group being processed.
+        mode (str): kraken modes retrieved from config file by setup.
+
+    Returns:
+        Figure: initial figure with traces for modes
+    """    
     df[f'{mode}_count'] = pd.to_numeric(df[f'{mode}_count'],errors='coerce')
     df[f'{mode}_percent'] = 100 * df[f'{mode}_count'] / df.groupby('submitted_date')[f'{mode}_count'].transform('sum')
     modes = settings['modes'][mode]

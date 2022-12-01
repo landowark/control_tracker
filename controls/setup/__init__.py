@@ -22,6 +22,23 @@ def join(loader, node) -> str:
 
 yaml.SafeLoader.add_constructor('!join', join)
 
+def construct_regex_groupings(settings:dict) -> dict:
+    """
+    Addition of boilerplate to the config regexes.
+
+    Args:
+        settings (dict): settings passed down from click
+
+    Returns:
+        dict: settings with additions to regexes in control_types
+    """    
+    for item in settings['control_types']:
+        date_r = f"(?:-{settings['date_regex']})?"
+        rerun_r = settings['rerun_regex'][0] + "?:" + settings['rerun_regex'][1:]
+        settings['control_types'][item]['regex'] = \
+            f"(?P<{item.replace('-', '_')}>{settings['control_types'][item]['regex']}){rerun_r}?{date_r}"
+    return settings
+
 
 def enforce_settings_booleans(settings:dict) -> dict:
     """
@@ -91,7 +108,7 @@ def make_config(click_ctx:dict={}) -> dict:
         except yaml.YAMLError as e:
             logger.error(e)
             config = {}
-    return enforce_settings_booleans({**config, **click_ctx})
+    return construct_regex_groupings(enforce_settings_booleans({**config, **click_ctx}))
 
 
 def setup_logger():

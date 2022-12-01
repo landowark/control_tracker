@@ -26,14 +26,14 @@ def write_output(filename:Path, output:str):
         f.write(output)
 
 
-def assemble_date_regex() -> re.Pattern:
+def assemble_date_regex(settings:dict={"date_regex": r"20\d{2}-?\d{2}-?\d{2}"}) -> re.Pattern:
     """
     Creates regex pattern for common date formats.
 
     Returns:
         re.Pattern: compiled pattern.
     """    
-    return re.compile(r"20\d{2}-?\d{2}-?\d{2}")
+    return re.compile(fr"{settings['date_regex']}")
 
 
 def create_date(raw_date:str) -> date:
@@ -97,6 +97,15 @@ def get_date_from_file_ctime(inpath: Path, filetype:str="") -> date:
 
     
 def get_most_recent_file(infiles:list) -> Path:
+    """
+    Returns most recently created file in a folder.
+
+    Args:
+        infiles (list): list of files.
+
+    Returns:
+        Path: path of the most recently created file.
+    """    
     print([f"{file}: {datetime.fromtimestamp(file.stat().st_ctime).date()}" for file in infiles])
     most_recent_date = max([datetime.fromtimestamp(file.stat().st_ctime).date() for file in infiles])
     most_recent_file = [file for file in infiles if get_date_from_file_ctime(file) == most_recent_date][0]
@@ -117,6 +126,15 @@ def alter_genera_names(input_dict:dict) -> dict:
 
 
 def get_relevant_fastq_files(folder:Path) -> Tuple[Path, Path]:
+    """
+    Provides the most recent fastq files in a folder
+
+    Args:
+        folder (Path): _description_
+
+    Returns:
+        Tuple[Path, Path]: _description_
+    """    
     fastqs = list(folder.glob('*.fastq'))
     if len(fastqs) == 2:
         return tuple(fastqs)
@@ -140,22 +158,41 @@ def parse_control_type_from_name(settings:dict, control_name:str) -> str:
     Returns:
         str: Parsed control type.
     """
-    if 'ct_type_regexes' in settings:
-        regexes = [fr"{item}" for item in settings['ct_type_regexes']]
-        # I have no idea what this is doing.
-        temp = '(?:% s)' % '|'.join(regexes)
-        # Note: matches here does not refer to the mode matches, but regex pattern matches.
-        matches = re.match(temp, control_name)
-        logger.debug(f"Regex matches: {matches}")
+    temp = construct_type_regexes(settings)
+    # Note: matches here does not refer to the mode matches, but regex pattern matches.
+    matches = re.match(temp, control_name)
+    logger.debug(f"Regex matches: {matches}")
+    try:
+        ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
+    except AttributeError as e:
+        return None
+    return ct_type
+
+def construct_type_regexes(settings:dict) -> str:
+    """
+    Builds one big regex from all regexes in config.yml['control_types']
+
+    Args:
+        settings (dict): settings passed down from click
+
+    Returns:
+        str: large regex
+    """    
+    regexes = []
+    for item in settings['control_types']:
+        rel = settings['control_types'][item]
         try:
-            ct_type = [item for item in matches.groupdict().keys() if matches.groupdict()[item] != None][0]
-        except AttributeError as e:
-            return None
-        return ct_type
-    else:
-        logger.warning(f"No control regexes found, going to return closest match to list of control types.")
-        types = list(settings['control_types'].keys())
-        return get_close_matches(control_name, types)[0]
+            regexes.append(fr"{rel['regex']}")
+        except KeyError:
+            logger.error(f"{item} has no regex associated. Attempting to construct from control type name.")
+            regexes.append(fr"(?P<{item.replace('-', '_')}>{item.split('-')[0]}-?[0-9a-zA-Z_]+)" + r"(?:-\d{8})?")        
+    # I have no idea what the line below is doing, but it works.
+    return '(?:% s)' % '|'.join(regexes)
+    
+    # else:
+    #     logger.warning(f"No control regexes found, going to return closest match to list of control types.")
+    #     types = list(settings['control_types'].keys())
+    #     return get_close_matches(control_name, types)[0]
     
 
 
@@ -173,6 +210,20 @@ def parse_date(in_date:date) -> str:
         return in_date.strftime("%Y-%m-%d")
     except AttributeError as e:
         return None
+
+def divide_chunks(input_list:list, chunk_count:int):
+    """
+    Divides a list into {chunk_count} equal parts
+
+    Args:
+        input_list (list): Initials list
+        chunk_count (int): size of each chunk
+
+    Returns:
+        tuple: tuple containing sublists.
+    """    
+    k, m = divmod(len(input_list), chunk_count)
+    return (input_list[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(chunk_count))
 
 
 def parse_sample_json(json_in:dict, mode:str) -> dict:
@@ -198,7 +249,17 @@ def parse_sample_json(json_in:dict, mode:str) -> dict:
 # take only json_in and mode to hook into the main processor.
 
 
-def parse_refseq_dict(json_in:dict, mode:str) -> dict:
+def parse_refseq_dict(json_in:dict, mode:str="contains") -> dict:
+    """
+    Parses the contain and matches dictionaries
+
+    Args:
+        json_in (dict): input dictionary
+        mode (str, optional): mode used by the main parser. Defaults to "contains".
+
+    Returns:
+        dict: parsed dictionary
+    """    
     new_dict = {}
     for top_key in json_in.keys():
         genus = json_in[top_key]['taxonomic_genus']
@@ -222,7 +283,17 @@ def parse_refseq_dict(json_in:dict, mode:str) -> dict:
     return new_dict
 
 
-def parse_kraken_dict(json_in:dict, mode:str) -> dict:
+def parse_kraken_dict(json_in:dict, mode:str="kraken") -> dict:
+    """
+    Parses Kraken output dictionary into relevant data.
+
+    Args:
+        json_in (dict): Input dictionary
+        mode (str): Mode used by the main parser (in this case will always be kraken)
+
+    Returns:
+        dict: _description_
+    """    
     new_dict = {}
     for top_key in json_in.keys():
         if json_in[top_key]["U"] == "G":
@@ -238,10 +309,7 @@ def parse_kraken_dict(json_in:dict, mode:str) -> dict:
     return new_dict
 
 
-def divide_chunks(input_list, chunk_count):
-    # looping till length l
-    k, m = divmod(len(input_list), chunk_count)
-    return (input_list[i*k+min(i, m):(i+1)*k+min(i+1, m)] for i in range(chunk_count))
+
 
 ########This must be at bottom of module###########
 

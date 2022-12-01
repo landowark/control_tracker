@@ -11,12 +11,14 @@ logger = logging.getLogger("controls.tools")
 
 def enforce_valid_date(settings:dict, inpath:Path) -> Tuple[date, bool]:
     """
-    Returns a valid date object and an old_db_path for reuse in main function.
+    Returns a valid date object and how it was obtained.
+
     Args:
-        folder (Path): _description_
-        old_db_path (str): _description_
+        settings (dict): settings passed down from click
+        inpath (Path): path with relevant files to obtain date from.
+
     Returns:
-        date: _description_
+        Tuple[date, bool]: Date and if it was obtained using file creation time.
     """    
     # Okay, we want to hopefully parse the date from the filename.
     logger.debug(f"Running regex on: {inpath.absolute().__str__()}")

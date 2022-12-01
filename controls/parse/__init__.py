@@ -6,14 +6,19 @@ from tools.subprocesses import run_refseq_masher, pull_from_irida, run_kraken
 from models import Control
 import logging
 from pathlib import Path
-import sys
-
+from datetime import datetime
 import json
 
 
 logger = logging.getLogger("controls.parse")
 
-def main_parse(settings):
+def main_parse(settings:dict):
+    """
+    Performs decision making and function assignment for parsing input data.
+
+    Args:
+        settings (dict): settings passed down from click.
+    """        
     logger.debug(f"PARSE Got settings passed down: {settings}")
     
     logger.debug(f"Storage = {settings['irida']['storage']}")
@@ -93,14 +98,26 @@ def main_parse(settings):
                 continue
             else:
                 add_control_to_db(newControl, mode=mode, settings=settings)
-    logger.info("The PARSE run has ended.")
+    logger.info(f"The PARSE run has ended at {datetime.now()}.")
 
 
 # Below this point are the individual parsing functions. They must be named "parse_{mode name}" and
 # take only settings, folder, mode and tsv_file in order to hook into the main function
 
 
-def process_refseq_masher(settings:dict, folder:str, mode:str, tsv_file:Path):
+def process_refseq_masher(settings:dict, folder:str, mode:str, tsv_file:Path) -> str:
+    """
+    Gets refseq masher results.
+
+    Args:
+        settings (dict): settings passed down from click
+        folder (str): folder to be run
+        mode (str): 'contains' or 'matches' from main parser.
+        tsv_file (Path): filepath to check for already existing results.
+
+    Returns:
+        str: output from process
+    """    
     tsv_text = run_refseq_masher(settings=settings, folder=folder.__str__(), mode=mode)
     logger.debug(f"Writing refseq_masher results to tsv_file: {tsv_file}")
     try:
@@ -111,7 +128,19 @@ def process_refseq_masher(settings:dict, folder:str, mode:str, tsv_file:Path):
     return tsv_text
 
 
-def process_kraken(settings:dict, folder:str, mode:str, tsv_file:Path):
+def process_kraken(settings:dict, folder:str, tsv_file:Path, mode:str='kraken') -> str:
+    """
+    _summary_
+
+    Args:
+        settings (dict): settings passed down from click
+        folder (str): folder to be run
+        tsv_file (Path): _description_
+        mode (str, optional): from main parser. Defaults to 'kraken'.
+
+    Returns:
+        str: output from process
+    """    
     run_kraken(settings=settings, folder=folder.__str__(), fastQ_pair=get_relevant_fastq_files(Path(folder)), tsv_file=tsv_file)
     return read_tsv(tsv_file)
 
