@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import click
 from setup import make_config, setup_logger
 from parse import main_parse
@@ -28,9 +29,9 @@ def cli(ctx, verbose, config):
     ctx.obj['verbose'] = verbose
     ctx.obj['config'] = config
     ctx.obj['settings'] = make_config(ctx.obj)
-    temp = ctx.obj['settings'].copy()
-    temp['irida']['password'] = "*************"
-    click.echo(f"Context: {ctx.obj}")
+    temp = copy.deepcopy(ctx.obj)
+    temp['settings']['irida']['password'] = "*************"
+    click.echo(f"Context: {temp}")
     
 
 @cli.command("parse")
