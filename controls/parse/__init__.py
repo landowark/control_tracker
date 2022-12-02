@@ -19,7 +19,7 @@ def main_parse(settings:dict):
     Args:
         settings (dict): settings passed down from click.
     """        
-    logger.debug(f"PARSE Got settings passed down: {settings}")
+    # logger.debug(f"PARSE Got settings passed down: {settings}")
     
     logger.debug(f"Storage = {settings['irida']['storage']}")
     # Perform new pull from irida

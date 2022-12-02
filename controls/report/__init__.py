@@ -13,7 +13,7 @@ def main_report(settings:dict):
     Args:
         settings (dict): Settings passed down from click.
     """        
-    logger.debug(f"REPORT Got settings passed down: {settings}")
+    # logger.debug(f"REPORT Got settings passed down: {settings}")
     logger.debug(f"Output folder: {settings['folder']['output']}")
     # Get all names of all control types for grouping.
     ct_types = get_all_Control_Types_names(settings=settings)

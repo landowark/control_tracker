@@ -5,6 +5,7 @@ from setup import make_config, setup_logger
 from parse import main_parse
 from report import main_report
 from tools.db_functions import create_control_types
+from pyfiglet import Figlet
 
 logger = setup_logger()
 
@@ -22,10 +23,13 @@ def cli(ctx, verbose, config):
     click.echo(f"Verbose: {verbose}")
     # ensure that ctx.obj exists and is a dict (in case `cli()` is called
     # by means other than the `if` block below)
+    click.echo(Figlet(font='slant').renderText("Controls Tracker"))
     ctx.ensure_object(dict)
     ctx.obj['verbose'] = verbose
     ctx.obj['config'] = config
     ctx.obj['settings'] = make_config(ctx.obj)
+    temp = ctx.obj['settings'].copy()
+    temp['irida']['password'] = "*************"
     click.echo(f"Context: {ctx.obj}")
     
 
