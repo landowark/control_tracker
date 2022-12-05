@@ -27,22 +27,10 @@ def read_tsv(filein: str) -> str:
         with open(filein, "r") as f:
             text = f.read()
         return text
-        # try:
-        #     df = pd.read_csv(filein, sep='\t', header=0)
-        # except pd.errors.EmptyDataError as e:
-        #     logger.error(f"Got an empty contains data file: {filein}, returning None.")
-        #     return None
-        # except FileNotFoundError as e:
-        #     logger.error(f"Somehow a non-existant file {filein} got past my check, returning None.")
-        #     return None
     else:
         logger.error(f"Could not find tsv file at {filein}. Returning None.")
         return None
-    #     df = DataFrame()
-    # logger.debug(f"Dataframe: {df}")
-    # # return df.dropna()
-    # return df
-
+    
 
 def read_tsv_string(string_in:str) -> DataFrame:
     """
@@ -147,7 +135,7 @@ def construct_df_from_json(settings:dict, group_name:str, group_in:dict, output_
     df = pd.concat(create_df_from_flattened_dict(settings=settings, flatteneds=group_in, targets=targets)) \
         .sort_values(by=sorts, ascending=ascending) \
         .reset_index().drop("index",1)
-    df = df.dropna()
+    # df = df.dropna()
     if not "test" in settings:
         logger.debug(f"Writing to: {Path(output_dir).joinpath(group_name)}.xlsx")
         df.to_excel(f"{Path(output_dir).joinpath(group_name)}.xlsx", engine="openpyxl")

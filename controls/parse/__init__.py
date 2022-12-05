@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from datetime import datetime
 import json
+from tqdm import tqdm
 
 
 logger = logging.getLogger("controls.parse")
@@ -30,8 +31,12 @@ def main_parse(settings:dict):
         logger.debug(f"Running parse for {mode}")
         # compare storage after pull to samples already in the database and remove any that are the same.
         samples_of_interest = check_samples_against_database(settings=settings, mode=mode)
+        if settings['verbose']:
+            marker = samples_of_interest
+        else:
+            marker = tqdm(samples_of_interest, desc =f"Parsing folders for {mode}")
         # Perform parsing of any new control samples.
-        for folder in samples_of_interest:
+        for folder in marker:
             sample_name = Path(folder).name
             newControl = Control(name=sample_name)
             tsv_file = Path(folder).joinpath(f"{sample_name}_{mode}.tsv")
@@ -58,7 +63,6 @@ def main_parse(settings:dict):
             # if no tsv file already exists...
             else:
                 logger.debug(f"No existing tsv file: {tsv_file}, running analysis subprocess for {mode}")
-# TODO: More stuff like this, for the json parser.
                 # setting parse function based on the mode
                 if mode == "contains" or mode == "matches":
                     func = function_map["process_refseq_masher"]

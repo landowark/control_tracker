@@ -44,7 +44,6 @@ def create_charts(settings:dict, df:pd.DataFrame, group_name:str) -> list:
     ascending = [False if item.split("_")[0] in settings['modes'] or item == "target" else True for item in sorts]
     df = df.sort_values(by=sorts, ascending=ascending)
     logger.debug(f"Unique names: {get_unique_values_in_df_column(df, column_name='name')}")
-    df.to_excel("test_drop_from_run.xlsx", engine="openpyxl")
     run_ref = True
     for mode in settings['modes']:
         if mode == "contains" or mode == "matches":
@@ -108,7 +107,7 @@ def generic_figure_markers(fig:Figure, modes:list=[]) -> Figure:
 
 def make_buttons(modes:list, fig_len:int) -> list:
     """
-    Creates list of buttons with one for each mode.
+    Creates list of buttons with one for each mode to be used in showing/hiding mode traces.
 
     Args:
         modes (list): list of modes used by main parser.
@@ -122,7 +121,7 @@ def make_buttons(modes:list, fig_len:int) -> list:
         for ii, mode in enumerate(modes):
             # What I need to do is create a list of bools with the same length as the fig.data
             mode_vis = [True] * fig_len
-            # And break it in {len(modes)} chunks
+            # And break it into {len(modes)} chunks
             mode_vis = list(divide_chunks(mode_vis, len(modes)))
             # Then, for each chunk, if the chunk index isn't equal to the index of the current mode, set to false
             for jj, sublist in enumerate(mode_vis):
@@ -152,7 +151,7 @@ def output_figures(settings:dict, figs:list, group_name:str):
             try:
                 f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
             except AttributeError:
-                sys.exit(f"The following figure was a string: {fig}")
+                logger.error(f"The following figure was a string: {fig}")
 
 # Below are the individual construction functions. They must be named "construct_{mode}_chart" and 
 # take only json_in and mode to hook into the main processor.
@@ -179,7 +178,7 @@ def construct_refseq_chart(settings:dict, df:pd.DataFrame, group_name:str, mode:
             color="target", 
             title=f"{group_name}_{mode}", 
             barmode='stack', 
-            hover_data=["genus", "name", f"{mode}_hashes", "target"], 
+            hover_data=["genus", "name", f"{mode}_hashes"], 
             text="genera"
         )
         bar.update_traces(visible = ii == 0)
@@ -203,6 +202,7 @@ def construct_kraken_chart(settings:dict, df:pd.DataFrame, group_name:str, mode:
         Figure: initial figure with traces for modes
     """    
     df[f'{mode}_count'] = pd.to_numeric(df[f'{mode}_count'],errors='coerce')
+    # The actual percentage from kraken was off due to exclusion of NaN, recalculating.
     df[f'{mode}_percent'] = 100 * df[f'{mode}_count'] / df.groupby('submitted_date')[f'{mode}_count'].transform('sum')
     modes = settings['modes'][mode]
     # This overwrites the mode from the signature, might get confusing.

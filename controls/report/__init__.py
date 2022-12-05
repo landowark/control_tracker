@@ -3,6 +3,7 @@ from tools.excel_functions import construct_df_from_json
 from tools.vis_functions import create_charts, output_figures
 import logging
 from datetime import datetime
+from tqdm import tqdm
 
 logger = logging.getLogger("controls.report")
 
@@ -23,7 +24,11 @@ def main_report(settings:dict):
     # logger.debug(f"By type: {by_type}")
     # Convert dictionaries to dataframes (Also writes xlsx)
     by_type = [construct_df_from_json(settings=settings, group_name=group, group_in=by_type[group], output_dir=settings['folder']['output']) for group in by_type]
-    for ct_type in by_type:
+    if settings['verbose']:
+        marker = by_type
+    else:
+        marker = tqdm(by_type, desc ="Generating reports")
+    for ct_type in marker:
         logger.debug(f"Group name: {list(ct_type.keys())[0]}")
         # Grab list name for chart title
         group_name = list(ct_type.keys())[0]
