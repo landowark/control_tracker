@@ -77,7 +77,7 @@ controls DBinit [OPTIONS]
 
 ### parse
 
-Pulls fastq files from Irida, runs refseq_masher and stores results.
+Pulls fastq files from Irida, runs refseq_masher, kraken2 and stores results.
 
 ```shell
 controls parse [OPTIONS]
@@ -91,12 +91,12 @@ Folder for storage of fastq files. Overwrites config.yml path.
 
 
 ### --mode <_mode_>
-Refseq_masher mode to be run. Defaults to ‘both’.
+Refseq_masher mode to be run. Defaults to ‘all’.
 
 
 * **Options**
 
-    contains | matches | both
+    contains | matches | kraken | all
 
 
 ### report
@@ -119,17 +119,26 @@ This file stores the configuration that will be used by the program and must be 
 Fill in values before the ‘#’ in config_dummy.yml and save as config.yml in the same folder.
 
 ```yaml
-# custom join statement defined in setup.__init__ 
+# <> must be replaced with user generated values.
+
+modes: #: external programs used to parse data
+  <mode>: #: [List of relevant columns generated for mode in database]
 irida:
   project_number: #: Project id assigned by irida
   project_name: #: Project name assigned by irida
   username: #: Username for irida permissions
   password: #: Password for irida permissions
   storage: #: Location to store irida shortcuts (only used if not overridden in command line options)
+kraken2:
+  db_path: #: location of kraken2 database on server
 folder:
+  # custom join statement defined in setup.__init__ 
   output: #: Where xlsx and html output files from reports will be stored.
   old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
-control_types: #: Key:value pairs where key is name of the control type and value is a list of targets.
-  #: e.g. ATCC49226: ["Neisseria"]
-ct_type_regexes: #: list of regex patterns to pull out control types.
+control_types: #: Archetypes of control samples
+  <controltype>: #: Control archetype name. 
+    targets: #: [List of target genera for control type]
+    regex: #: Regular expression used to parse this control type
+date_regex: #: Regular expression used to parse submission date.
+rerun_regex: #: Regular expression used to parse whether a sample is a rerun
 ```

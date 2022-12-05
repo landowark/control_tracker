@@ -1,6 +1,6 @@
 # custom join statement defined in setup.__init__ 
 
-# <> must be replaced with user values.
+# <> must be replaced with user generated values.
 
 modes: #: external programs used to parse data
   <mode>: #: [List of relevant columns generated for mode in database]
@@ -20,4 +20,5 @@ control_types: #: Archetypes of control samples
   <controltype>: #: Control archetype name. 
     targets: #: [List of target genera for control type]
     regex: #: Regular expression used to parse this control type
+date_regex: #: Regular expression used to parse submission date.
 rerun_regex: #: Regular expression used to parse whether a sample is a rerun
