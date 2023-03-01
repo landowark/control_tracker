@@ -159,6 +159,7 @@ def parse_control_type_from_name(settings:dict, control_name:str) -> str:
         str: Parsed control type.
     """
     temp = construct_type_regexes(settings)
+    logger.debug(f"Attempting to parse using regex: {temp}")
     # Note: matches here does not refer to the mode matches, but regex pattern matches.
     matches = re.match(temp, control_name)
     logger.debug(f"Regex matches: {matches}")

@@ -1,3 +1,4 @@
+import difflib
 import json
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, engine
@@ -19,6 +20,7 @@ def make_engine(settings:dict={}):
     if 'db_path' in settings:
         db_path = settings['db_path']
     else:
+        logger.warning(f"Database path not found in settings! Using default path.")
         db_path = Path(__file__).parent.parent.parent.absolute().joinpath("controls.db").__str__()
     logger.debug(f"db_path={db_path}")
     engine = create_engine(f"sqlite:///{db_path}")
@@ -190,7 +192,7 @@ def convert_control_to_dict(control:Control, settings:dict={}, engine:engine=Non
         dict: contains everything you need to know about the control in easy to handle dictionary.
     """
     if engine == None:
-        engine = make_engine()
+        engine = make_engine(settings=settings)
     logger.debug(f"Attempting dictionary creation of {control.name}")
     name = control.name
     control = control.__dict__
@@ -282,3 +284,69 @@ def create_control_types(settings:dict, engine:engine=None) -> None:
         session.add(ct)
     session.commit()
     session.close()
+
+
+def link_control_to_submission(settings:dict, control:Control, engine:engine=None) -> Control:
+    """
+    check for matching samples in a submission and add submission as control parent if found.
+
+    Args:
+        settings (dict): settings passed down from click.
+        control (Control): Control to be used in search
+        engine (engine, optional): engine used. Defaults to None.
+
+    Returns:
+        Control: control with submission added as parent
+    """    
+    all_bcs = lookup_all_submissions_by_type(settings=settings, sub_type="Bacterial Culture", engine=engine)
+    logger.debug(all_bcs)
+    for bcs in all_bcs:
+        logger.debug(f"Running for {bcs.rsl_plate_num}")
+        samples = [sample.sample_id for sample in bcs.samples]
+        logger.debug(bcs.controls)
+        for sample in samples:
+            if " " in sample:
+                logger.warning(f"There is not supposed to be a space in the sample name!!!")
+                sample = sample.replace(" ", "")
+            diff = difflib.SequenceMatcher(a=sample, b=control.name).ratio()
+            # if diff > 0.955:
+            if control.name.startswith(sample):
+                # logger.debug(f"Checking {sample} against {control.name}... {diff}")
+            # if sample == control.name:
+                logger.debug(f"Found match:\n\tSample: {sample}\n\tControl: {control.name}\n\tDifference: {diff}")
+                if control in bcs.controls:
+                    logger.debug(f"{control.name} already in {bcs.rsl_plate_num}, skipping")
+                    continue
+                else:
+                    logger.debug(f"Adding {control.name} to {bcs.rsl_plate_num} as control")
+                    bcs.controls.append(control)
+                    # bcs.control_id.append(control.id)
+                    control.submission = bcs
+                    control.submission_id = bcs.id
+    # self.ctx["database_session"].add(bcs)
+    # logger.debug(f"To be added: {ctx['database_session'].new}")
+        logger.debug(f"Here is the new control: {[control.name for control in bcs.controls]}")
+    # p = ctx["database_session"].query(models.BacterialCulture).filter(models.BacterialCulture.rsl_plate_num==bcs.rsl_plate_num).first()
+    return control
+
+
+def lookup_all_submissions_by_type(settings:dict, sub_type:str=None, engine:engine=None) -> list:
+    """
+    Get all submissions, filtering by type if given
+
+    Args:
+        ctx (dict): settings pass from gui
+        type (str | None, optional): submission type (should be string in D3 of excel sheet). Defaults to None.
+
+    Returns:
+        _type_: list of retrieved submissions
+    """
+    if engine == None:
+        session = Session(make_engine(settings=settings))
+    else:
+        session = Session(engine)
+    if type == None:
+        subs = session.query(BasicSubmission).all()
+    else:
+        subs = session.query(BasicSubmission).filter(BasicSubmission.submission_type==sub_type).all()
+    return subs

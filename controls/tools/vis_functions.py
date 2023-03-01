@@ -3,12 +3,8 @@ import pandas as pd
 from pathlib import Path
 from plotly.graph_objects import Figure
 import logging
-from .excel_functions import get_unique_values_in_df_column, drop_reruns_from_df
-from .misc import divide_chunks
-import sys
 
 logger = logging.getLogger("controls.tools.vis_functions")
-
 
 
 def create_charts(settings:dict, df:pd.DataFrame, group_name:str) -> list:
@@ -23,7 +19,7 @@ def create_charts(settings:dict, df:pd.DataFrame, group_name:str) -> list:
     Returns:
         Figure: _description_
     """    
-    
+    from .excel_functions import get_unique_values_in_df_column, drop_reruns_from_df
     genera = []
     figs = []
     for item in df['genus'].to_list():
@@ -100,7 +96,7 @@ def generic_figure_markers(fig:Figure, modes:list=[]) -> Figure:
             ])
         )
     )
-    logger.debug(f"Returning figure {fig}")
+    # logger.debug(f"Returning figure {fig}")
     assert type(fig) == Figure
     return fig
 
@@ -115,7 +111,8 @@ def make_buttons(modes:list, fig_len:int) -> list:
 
     Returns:
         list: list of buttons.
-    """    
+    """
+    from .misc import divide_chunks
     buttons = []
     if len(modes) > 0:
         for ii, mode in enumerate(modes):

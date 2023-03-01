@@ -4,7 +4,7 @@ You can adapt this file completely to your liking, but it should at least
 contain the root `toctree` directive. -->
 # Welcome to control tracker’s documentation!
 
-This project was created to parse the output of refseq_masher on an Irida project using its ```parse``` command and store that output in a local SQLite database. It can then create seperate time series html files (example below) for each class of sample from the project using its ```report``` command.
+This project was created to parse the output of bioinformatics tools on an Irida project using its ```parse``` command and store that output in a local SQLite database. It can then create seperate time series html files (example below) for each class of sample from the project using its ```report``` command.
 
 
 ![Sample Report](img/example_plot.png)
@@ -77,6 +77,101 @@ controls DBinit [OPTIONS]
 
 ### parse
 
+Pulls fastq files from Irida, runs refseq_masher and stores results.
+
+```shell
+controls parse [OPTIONS]
+```
+
+### Options
+
+
+### -s, --storage <_storage_>
+Folder for storage of fastq files. Overwrites config.yml path.
+
+
+### --mode <_mode_>
+Refseq_masher mode to be run. Defaults to ‘both’.
+
+
+* **Options**
+
+    contains | matches | kraken | all
+
+
+### report
+
+Generates html and xlsx reports.
+
+```shell
+controls report [OPTIONS]
+```
+
+### Options
+
+
+### -o, --output_dir <_output_dir_>
+Folder for storage of reports. Overwrites config.yml path.
+
+# Configuration file.
+
+This file stores the configuration that will be used by the program and must be filled in by the user.
+Fill in values before the ‘#’ in config_dummy.yml and save as config.yml in the same folder.
+
+```yaml
+# custom join statement defined in setup.__init__ 
+
+# <> must be replaced with user generated values.
+
+modes: #: external programs used to parse data
+  <mode>: #: [List of relevant columns generated for mode in database]
+irida:
+  project_number: #: Project id assigned by irida
+  project_name: #: Project name assigned by irida
+  username: #: Username for irida permissions
+  password: #: Password for irida permissions
+  storage: #: Location to store irida shortcuts (only used if not overridden in command line options)
+kraken2:
+  db_path: #: location of kraken2 database on server
+folder:
+  # custom join statement defined in setup.__init__ 
+  output: #: Where xlsx and html output files from reports will be stored.
+  old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
+control_types: #: Archetypes of control samples
+  <controltype>: #: Control archetype name. 
+    targets: #: [List of target genera for control type]
+    regex: #: Regular expression used to parse this control type
+date_regex: #: Regular expression used to parse submission date.
+rerun_regex: #: Regular expression used to parse whether a sample is a rerun
+```
+
+
+<!-- # Usage.
+
+## controls
+
+```shell
+controls [OPTIONS] COMMAND [ARGS]...
+```
+
+### Options
+
+
+### -v, --verbose
+Set logging level to DEBUG if true.
+
+
+### -c, --config <_config_>
+Path to config.yml. If blank defaults to first found of ~/.config/controls/config.yml, ~/.controls/config.yml or controls/config.yml
+
+### DBinit
+
+```shell
+controls DBinit [OPTIONS]
+```
+
+### parse
+
 Pulls fastq files from Irida, runs refseq_masher, kraken2 and stores results.
 
 ```shell
@@ -119,7 +214,7 @@ This file stores the configuration that will be used by the program and must be 
 Fill in values before the ‘#’ in config_dummy.yml and save as config.yml in the same folder.
 
 ```yaml
-# <> must be replaced with user generated values.
+# <> must be replaced with user generated values
 
 modes: #: external programs used to parse data
   <mode>: #: [List of relevant columns generated for mode in database]
@@ -134,11 +229,11 @@ kraken2:
 folder:
   # custom join statement defined in setup.__init__ 
   output: #: Where xlsx and html output files from reports will be stored.
-  old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name.
+  old_db_path: #: Location of old database export file for retrieving dates. Not necessary if date in sample name
 control_types: #: Archetypes of control samples
-  <controltype>: #: Control archetype name. 
+  <controltype>: #: Control archetype name
     targets: #: [List of target genera for control type]
     regex: #: Regular expression used to parse this control type
-date_regex: #: Regular expression used to parse submission date.
+date_regex: #: Regular expression used to parse submission date
 rerun_regex: #: Regular expression used to parse whether a sample is a rerun
-```
+``` -->

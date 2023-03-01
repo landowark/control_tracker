@@ -40,7 +40,7 @@ def cli(ctx, verbose, config):
 # TODO: Possibly load in modes from config.yml 
 @click.option('--mode', type=click.Choice(modes_all), default="all", help="Refseq_masher mode to be run. Defaults to 'both'.")
 def parse(ctx, storage, mode):
-    """Pulls fastq files from Irida, runs refseq_masher and stores results."""
+    """Pulls fastq files from Irida, runs refseq_masher/kraken2 and stores results."""
     if storage != None:
         ctx.obj['settings']['irida']['storage'] = storage
     if mode == "all":
@@ -54,11 +54,13 @@ def parse(ctx, storage, mode):
 
 @cli.command("report")
 @click.pass_context
-@click.option("-o", "--output_dir", type=click.Path(exists=True), help="Folder for storage of reports. Overwrites config.yml path.")
-def report(ctx, output_dir):
+@click.option("-o", "--output-dir", type=click.Path(exists=True), help="Folder for storage of reports. Overwrites config.yml path.")
+@click.option("-t", "--text-only", is_flag=True, help="Export full results to json and excel files only.")
+def report(ctx, output_dir, text_only):
     """Generates html and xlsx reports."""
     if output_dir != None:
         ctx.obj['settings']['folder']['output'] = output_dir
+    ctx.obj['settings']['text_only'] = text_only
     main_report(ctx.obj['settings'])
     click.echo("The reports run has finished.")
 

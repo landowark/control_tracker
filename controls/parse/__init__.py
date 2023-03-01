@@ -1,6 +1,6 @@
 from tools import enforce_valid_date
 from tools.excel_functions import read_tsv_string, read_tsv
-from tools.db_functions import get_control_type_by_name, add_control_to_db, check_samples_against_database
+from tools.db_functions import get_control_type_by_name, add_control_to_db, check_samples_against_database, link_control_to_submission
 from tools.misc import write_output, parse_control_type_from_name, parse_sample_json, alter_genera_names, get_relevant_fastq_files
 from tools.subprocesses import run_refseq_masher, pull_from_irida, run_kraken
 from models import Control
@@ -20,11 +20,12 @@ def main_parse(settings:dict):
     Args:
         settings (dict): settings passed down from click.
     """        
-    # logger.debug(f"PARSE Got settings passed down: {settings}")
-    
     logger.debug(f"Storage = {settings['irida']['storage']}")
     # Perform new pull from irida
-    logger.debug(f"Pulling from irida with settings: {settings['irida']}")
+    temp = settings['irida']
+    temp['password'] = "********"
+    logger.debug(f"Pulling from irida with settings: {temp}")
+    del temp
     pull_from_irida(settings['irida'])
     # loop through for each mode being run
     for mode in settings['mode']:
@@ -97,6 +98,8 @@ def main_parse(settings:dict):
                 logger.warning(f"Got date from fastq file, adding asterisks to genera names.")
                 reads_json = alter_genera_names(reads_json)
             setattr(newControl, mode, json.dumps(reads_json))
+            # check for matching samples in a submission and add submission as control parent if found.
+            newControl = link_control_to_submission(settings=settings, control=newControl)
             if getattr(newControl, mode) == json.dumps({}) and newControl.submitted_date == None:
                 logger.warning(f"Sample {newControl.name} has no {settings['mode']} or date. Skipping")
                 continue

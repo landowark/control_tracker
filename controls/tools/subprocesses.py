@@ -71,7 +71,7 @@ def pull_from_irida(irida_settings:dict):
         return out
     except CalledProcessError as e:
         logger.error(f"There was a problem pulling from Irida: {e}. Nothing worth doing, so exiting.")
-        sys.exit()
+        # sys.exit()
 
 
 '''Usage:
